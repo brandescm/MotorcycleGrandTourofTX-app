@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { MapPin, Navigation, Search, Download, Map } from 'lucide-react';
+import { MapPin, Navigation, Search, Download, Map, Camera } from 'lucide-react';
 import './App.css'
 
 const App = () => {
@@ -242,6 +242,15 @@ const App = () => {
           <p className="text-xs text-gray-500">App Version: {APP_VERSION}</p>
           <p className="text-gray-400">Organized by Distance from Your Starting Point</p>
           <div className="flex justify-center gap-6 mt-4 text-sm flex-wrap">
+            <a 
+              href="https://motorcyclegrandtouroftexas.com/picture-submission-portal-2026-tour/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-green-400 hover:text-green-300 transition-colors font-medium"
+            >
+              <Camera size={16} />
+              Submit Tour Photos
+            </a>
             <div className="flex items-center gap-2">
               <MapPin className="text-orange-400" size={16} />
               <span>{stops.length} Total Stops</span>
