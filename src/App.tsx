@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { MapPin, Navigation, Search, Download, Map, Camera, CheckCircle, ChevronDown } from 'lucide-react';
+import { MapPin, Navigation, Search, Download, Map, Camera, CheckCircle, ChevronDown, Route, AlertCircle } from 'lucide-react';
 import './App.css'
 import './mobile.css'
 
@@ -10,7 +10,8 @@ const App = () => {
   const [selectedRegion, setSelectedRegion] = useState('all');
   const [startCity, setStartCity] = useState('Liberty Hill');
   
-
+  const [selectedForRoute, setSelectedForRoute] = useState<Set<string>>(new Set());
+  const [showRoutePlanner, setShowRoutePlanner] = useState(false);
   // Approximate coordinates for distance calculations
   const cityCoordinates = {
     'Liberty Hill': { lat: 30.6660, lon: -97.9225 },
@@ -70,6 +71,57 @@ const App = () => {
         newExpanded.add(idx);
       }
       setExpandedStops(newExpanded);
+  };
+
+  const addToRoute = (stopName: string) => {
+    const newSelected = new Set(selectedForRoute);
+    if (newSelected.has(stopName)) {
+      newSelected.delete(stopName);
+    } else {
+      newSelected.add(stopName);
+    }
+    setSelectedForRoute(newSelected);
+  };
+
+  const openMultiStopRoute = () => {
+    const selectedStops = filteredStops.filter(s => selectedForRoute.has(s.name));
+    
+    if (selectedStops.length === 0) {
+      alert('Please select at least one stop for your route');
+      return;
+    }
+    
+    if (selectedStops.length === 1) {
+      // Single stop - just open it
+      const stop = selectedStops[0];
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address + ', ' + stop.city)}`, '_blank');
+      return;
+    }
+    
+    // Google Maps allows max 10 waypoints, so limit to 11 total stops
+    if (selectedStops.length > 11) {
+      alert('Google Maps supports a maximum of 11 stops. Please select fewer stops or create multiple routes.');
+      return;
+    }
+    
+    // Build multi-stop route
+    const origin = selectedStops[0];
+    const destination = selectedStops[selectedStops.length - 1];
+    const waypoints = selectedStops.slice(1, -1)
+      .map(s => encodeURIComponent(`${s.address}, ${s.city}`))
+      .join('|');
+    
+    let url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin.address + ', ' + origin.city)}&destination=${encodeURIComponent(destination.address + ', ' + destination.city)}`;
+    
+    if (waypoints) {
+      url += `&waypoints=${waypoints}`;
+    }
+    
+    window.open(url, '_blank');
+  };
+
+  const clearRoute = () => {
+    setSelectedForRoute(new Set());
   };
 
   const baseStops = [
@@ -866,7 +918,6 @@ const App = () => {
               </select>
             </div>
           </div>
-
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={exportToCSV}
@@ -881,6 +932,13 @@ const App = () => {
             >
               <MapPin size={18} />
               Copy Address List
+            </button>
+            <button
+              onClick={() => setShowRoutePlanner(!showRoutePlanner)}
+              className={`flex items-center justify-center gap-2 ${showRoutePlanner ? 'bg-orange-700' : 'bg-orange-600'} hover:bg-orange-700 text-white px-4 py-2 rounded transition-colors`}
+            >
+              <Route size={18} />
+              {showRoutePlanner ? 'Hide' : 'Show'} Route Planner
             </button>
           </div>
         </div>
@@ -926,13 +984,83 @@ const App = () => {
             </button>
           </div>
         )}
-
+        {showRoutePlanner && (
+        <div className="bg-gradient-to-r from-orange-900 to-orange-800 rounded-lg p-6 mb-6 border border-orange-600">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-xl font-bold text-white">Route Planner</h3>
+              <p className="text-orange-200 text-sm mt-1">
+                Select stops below to build a multi-stop route (max 11 stops)
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-white font-bold text-lg">
+                {selectedForRoute.size} selected
+              </span>
+              {selectedForRoute.size > 0 && (
+                <button
+                  onClick={clearRoute}
+                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {selectedForRoute.size > 0 && (
+            <div className="bg-orange-950 bg-opacity-50 rounded-lg p-4 mb-4">
+              <h4 className="text-orange-300 font-semibold mb-2 text-sm">Selected Route:</h4>
+              <ol className="space-y-1">
+                {filteredStops
+                  .filter(s => selectedForRoute.has(s.name))
+                  .map((stop, idx) => (
+                    <li key={stop.name} className="text-white text-sm flex items-center gap-2">
+                      <span className="bg-orange-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                        {idx + 1}
+                      </span>
+                      <span>{stop.name} ({stop.city})</span>
+                      <button
+                        onClick={() => addToRoute(stop.name)}
+                        className="text-red-400 hover:text-red-300 ml-auto text-xs"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+              </ol>
+            </div>
+          )}
+          
+          <div className="flex gap-3">
+            <button
+              onClick={openMultiStopRoute}
+              disabled={selectedForRoute.size === 0}
+              className={`flex items-center justify-center gap-2 ${
+                selectedForRoute.size === 0 
+                  ? 'bg-gray-600 cursor-not-allowed' 
+                  : 'bg-green-600 hover:bg-green-700'
+              } text-white px-6 py-3 rounded-lg transition-colors font-semibold`}
+            >
+              <Route size={20} />
+              Open Route in Google Maps
+            </button>
+            {selectedForRoute.size > 11 && (
+              <div className="flex items-center gap-2 text-yellow-300 text-sm">
+                <AlertCircle size={16} />
+                Too many stops! Max 11 allowed
+              </div>
+            )}
+          </div>
+        </div>
+      )}
         <div className="bg-gray-800 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-950">
                 <tr>
                   <th className="px-4 py-3 text-left text-orange-500">#</th>
+                  <th className="px-4 py-3 text-left text-orange-500">Route</th>
                   <th className="px-4 py-3 text-left text-orange-500">Stop Name</th>
                   <th className="px-4 py-3 text-left text-orange-500">City</th>
                   <th className="px-4 py-3 text-left text-orange-500">Address</th>
@@ -949,6 +1077,14 @@ const App = () => {
                     {/* Mobile: Collapsed view */}
                     <td className="mobile-card" colSpan={6}>
                       <div className="mobile-card-header">
+                        {showRoutePlanner && (
+                          <input
+                            type="checkbox"
+                            checked={selectedForRoute.has(stop.name)}
+                            onChange={() => addToRoute(stop.name)}
+                            className="w-6 h-6 text-orange-600 bg-gray-700 border-gray-600 rounded focus:ring-orange-500 cursor-pointer flex-shrink-0"
+                          />
+                        )}
                         <button
                           onClick={() => toggleVisited(stop.name)}
                           className={`transition-colors flex-shrink-0 ${visitedStops.has(stop.name) ? 'text-green-400' : 'text-gray-600 hover:text-gray-400'}`}
@@ -1016,6 +1152,16 @@ const App = () => {
                     
                     {/* Desktop: Regular table view */}
                     <td className="desktop-cell px-4 py-3 text-gray-400">{idx + 1}</td>
+                    <td className="desktop-cell px-4 py-3">  {/* Add this new cell */}
+                      {showRoutePlanner && (
+                        <input
+                          type="checkbox"
+                          checked={selectedForRoute.has(stop.name)}
+                          onChange={() => addToRoute(stop.name)}
+                          className="w-5 h-5 text-orange-600 bg-gray-700 border-gray-600 rounded focus:ring-orange-500 cursor-pointer"
+                        />
+                      )}
+                    </td>
                     <td className="desktop-cell px-4 py-3 font-semibold text-white">
                       <div className="flex items-center gap-2">
                         <button
