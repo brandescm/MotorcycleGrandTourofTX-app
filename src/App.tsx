@@ -1,7 +1,8 @@
 
 import { useState } from 'react';
-import { MapPin, Navigation, Search, Download, Map, Camera, CheckCircle } from 'lucide-react';
+import { MapPin, Navigation, Search, Download, Map, Camera, CheckCircle, ChevronDown } from 'lucide-react';
 import './App.css'
+import './mobile.css'
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -58,6 +59,18 @@ const App = () => {
     const saved = localStorage.getItem('visitedStops');
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
+
+  const [expandedStops, setExpandedStops] = useState<Set<number>>(new Set());
+
+  const toggleExpanded = (idx: number) => {
+      const newExpanded = new Set(expandedStops);
+      if (newExpanded.has(idx)) {
+        newExpanded.delete(idx);
+      } else {
+        newExpanded.add(idx);
+      }
+      setExpandedStops(newExpanded);
+  };
 
   const baseStops = [
   // Within 50 miles
@@ -931,14 +944,83 @@ const App = () => {
                 {filteredStops.map((stop, idx) => (
                   <tr 
                     key={idx} 
-                    className={`border-b border-gray-700 hover:bg-gray-750 transition-colors ${visitedStops.has(stop.name) ? 'bg-green-900 bg-opacity-20' : ''}`}
+                    className={`border-b border-gray-700 transition-colors ${visitedStops.has(stop.name) ? 'bg-green-900 bg-opacity-20' : ''}`}
                   >
-                    <td className="px-4 py-3 text-gray-400">{idx + 1}</td>
-                    <td className="px-4 py-3 font-semibold text-white">
+                    {/* Mobile: Collapsed view */}
+                    <td className="mobile-card" colSpan={6}>
+                      <div className="mobile-card-header">
+                        <button
+                          onClick={() => toggleVisited(stop.name)}
+                          className={`transition-colors flex-shrink-0 ${visitedStops.has(stop.name) ? 'text-green-400' : 'text-gray-600 hover:text-gray-400'}`}
+                          title={visitedStops.has(stop.name) ? 'Mark as not visited' : 'Mark as visited'}
+                        >
+                          <CheckCircle size={20} fill={visitedStops.has(stop.name) ? 'currentColor' : 'none'} />
+                        </button>
+                        
+                        <span className={`flex-grow font-semibold ${visitedStops.has(stop.name) ? 'line-through opacity-60' : ''}`}>
+                          {stop.name}
+                        </span>
+                        
+                        <div className="flex gap-2 items-center flex-shrink-0">
+                          <button
+                            onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address + ', ' + stop.city)}`, '_blank')}
+                            className="text-blue-400 hover:text-blue-300 transition-colors"
+                            title="View on Google Maps"
+                          >
+                            <Map size={18} />
+                          </button>
+                          {stop.imageUrl && (
+                            <button
+                              onClick={() => window.open(stop.imageUrl, '_blank')}
+                              className="text-purple-400 hover:text-purple-300 transition-colors"
+                              title="View Stop Photo"
+                            >
+                              <Camera size={18} />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => toggleExpanded(idx)}
+                            className="text-gray-400 hover:text-gray-200 transition-all lg:hidden"
+                            title={expandedStops.has(idx) ? 'Collapse' : 'Expand'}
+                          >
+                            <ChevronDown 
+                              size={20} 
+                              className={`transition-transform ${expandedStops.has(idx) ? 'rotate-180' : ''}`}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Mobile: Expanded details */}
+                      <div className={`mobile-card-details ${expandedStops.has(idx) ? 'expanded' : ''}`}>
+                        <div className="detail-row">
+                          <span className="detail-label">City:</span>
+                          <span className="text-gray-300">{stop.city}</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="detail-label">Address:</span>
+                          <span className="text-gray-400 text-sm">{stop.address}</span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="detail-label">Distance:</span>
+                          <span className={`inline-block ${getDistanceColor(stop.distance)} px-3 py-1 rounded-full text-sm font-semibold`}>
+                            {stop.distance} mi
+                          </span>
+                        </div>
+                        <div className="detail-row">
+                          <span className="detail-label">Region:</span>
+                          <span className="text-blue-400 text-sm">{stop.region}</span>
+                        </div>
+                      </div>
+                    </td>
+                    
+                    {/* Desktop: Regular table view */}
+                    <td className="desktop-cell px-4 py-3 text-gray-400">{idx + 1}</td>
+                    <td className="desktop-cell px-4 py-3 font-semibold text-white">
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => toggleVisited(stop.name)}
-                          className={`transition-colors ${visitedStops.has(stop.name) ? 'text-green-400' : 'text-gray-600 hover:text-gray-400'}`}
+                          className={`transition-colors flex-shrink-0 ${visitedStops.has(stop.name) ? 'text-green-400' : 'text-gray-600 hover:text-gray-400'}`}
                           title={visitedStops.has(stop.name) ? 'Mark as not visited' : 'Mark as visited'}
                         >
                           <CheckCircle size={20} fill={visitedStops.has(stop.name) ? 'currentColor' : 'none'} />
@@ -948,7 +1030,7 @@ const App = () => {
                         </span>
                         <div className="flex gap-1">
                           <button
-                            onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${stop.lat},${stop.lon}`, '_blank')}
+                            onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address + ', ' + stop.city)}`, '_blank')}
                             className="text-blue-400 hover:text-blue-300 transition-colors"
                             title="View on Google Maps"
                           >
@@ -966,14 +1048,14 @@ const App = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-gray-300">{stop.city}</td>
-                    <td className="px-4 py-3 text-gray-400 text-sm">{stop.address}</td>
-                    <td className="px-4 py-3">
+                    <td className="desktop-cell px-4 py-3 text-gray-300">{stop.city}</td>
+                    <td className="desktop-cell px-4 py-3 text-gray-400 text-sm">{stop.address}</td>
+                    <td className="desktop-cell px-4 py-3">
                       <span className={`inline-block ${getDistanceColor(stop.distance)} px-3 py-1 rounded-full text-sm font-semibold`}>
                         {stop.distance} mi
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="desktop-cell px-4 py-3">
                       <span className="text-blue-400 text-sm">{stop.region}</span>
                     </td>
                   </tr>
