@@ -1,0 +1,210 @@
+/* Mobile optimizations */
+
+/* Hide mobile cards on desktop */
+.mobile-card {
+  display: none;
+}
+
+.desktop-cell {
+  display: table-cell;
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.75rem !important;
+  }
+  
+  /* Hide desktop table cells on mobile */
+  .desktop-cell {
+    display: none !important;
+  }
+  
+  /* Show mobile cards */
+  .mobile-card {
+    display: block !important;
+    padding: 0 !important;
+    height: auto !important; 
+    min-height: auto !important;
+  }
+  
+  /* Make cards stack better */
+  .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Remove table styling on mobile */
+  table {
+    border-collapse: collapse;
+  }
+  
+  thead {
+    display: none;
+  }
+  
+  tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid #475569;
+    border-radius: 12px;
+    background: rgba(31, 41, 55, 0.6);
+    overflow: visible !important;
+    position: relative;
+    z-index: 1;
+    height: auto !important;
+    min-height: auto !important;
+  }
+  
+  tbody td {
+    display: block;
+    border: none;
+    height: auto !important;
+    min-height: auto !important;
+  }
+  
+  /* Mobile card header (always visible) */
+  .mobile-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: rgba(31, 41, 55, 0.8);
+    min-height: 60px;
+  }
+  
+  .mobile-card-header span {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    word-wrap: break-word;
+    align-self: center; 
+  }
+  
+  .mobile-card-header button {
+    flex-shrink: 0;
+    align-self: center; 
+  }
+
+  .mobile-card-header > div {
+    align-self: center;  /* Added this for button groups */
+  }
+  
+  /* Mobile card details (collapsible) */
+  .mobile-card-details {
+    display: block;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out, padding 0.4s ease-in-out;
+    background: rgba(17, 24, 39, 0.4);
+    padding: 0 1rem;
+  }
+  
+  .mobile-card-details.expanded {
+    max-height: 800px !important;  /* Increased from 600px */
+    opacity: 1;
+    padding: 1rem;
+    border-top: 1px solid rgba(75, 85, 99, 0.5);
+    overflow: visible !important;  /* Added this */
+    display: block !important;  /* Added this */
+    background: rgba(17, 24, 39, 0.95) !important;
+  }
+  
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+    gap: 1rem;
+  }
+  
+  .detail-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  
+  .detail-row:first-child {
+    padding-top: 0;
+  }
+  
+  .detail-label {
+    font-weight: 600;
+    color: #fb923c;
+    font-size: 0.813rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    min-width: 80px;
+    flex-shrink: 0;
+  }
+  
+  .detail-row > span:last-child {
+    text-align: right;
+    flex-grow: 1;
+  }
+  
+  /* Larger tap targets */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.5rem !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  button svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  
+  /* Stack control buttons */
+  .flex.flex-col.sm\:flex-row {
+    flex-direction: column !important;
+  }
+  
+  /* Better spacing for mobile */
+  .p-4 {
+    padding: 1rem !important;
+  }
+  
+  .mb-6 {
+    margin-bottom: 1rem !important;
+  }
+  
+  .mb-8 {
+    margin-bottom: 1.5rem !important;
+  }
+  
+  /* Distance groups on mobile */
+  .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  
+  /* Better select dropdowns */
+  select {
+    font-size: 16px !important;
+  }
+  
+  input[type="text"] {
+    font-size: 16px !important;
+  }
+  
+  /* Fix for green background on visited */
+  tbody tr.bg-green-900 {
+    background: rgba(20, 83, 45, 0.3) !important;
+  }
+
+  /* Make sure expanded cards are on top */
+  tbody tr:has(.mobile-card-details.expanded) {
+    z-index: 10 !important;
+    position: relative;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
