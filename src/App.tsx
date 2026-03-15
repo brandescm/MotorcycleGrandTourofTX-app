@@ -1,14 +1,20 @@
 
 import { useState } from 'react';
-import { MapPin, Navigation, Search, Download, Map, Camera, CheckCircle, ChevronDown } from 'lucide-react';
+import { MapPin, Navigation, Search, Download, Map, Camera, CheckCircle, ChevronDown, Route, AlertCircle, Copy } from 'lucide-react';
 import './App.css'
 import './mobile.css'
+import { baseStops, type TourStop } from './tourStops';
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('distance');
   const [selectedRegion, setSelectedRegion] = useState('all');
   const [startCity, setStartCity] = useState('Liberty Hill');
+  
+  const [selectedForRoute, setSelectedForRoute] = useState<Set<string>>(new Set());
+  const [showRoutePlanner, setShowRoutePlanner] = useState(false);
+  const [userLocation, setUserLocation] = useState<{lat: number, lon: number} | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
   
 
   // Approximate coordinates for distance calculations
@@ -28,6 +34,34 @@ const App = () => {
     'Waco': { lat: 31.5493, lon: -97.1467 },
     'Midland': { lat: 31.9973, lon: -102.0779 },
     'Tyler': { lat: 32.3513, lon: -95.3011 }
+  };
+
+  // Calculate distances based on selected starting city
+  const startCoords = cityCoordinates[startCity as keyof typeof cityCoordinates];
+  console.log('Start City:', userLocation ? 'Current Location' : startCity);
+  console.log('Start Coords:', startCoords);
+  // console.log('First stop:', baseStops[0]);
+
+  // Get user's location
+  const getUserLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation not supported by your browser');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lon: position.coords.longitude
+        });
+        setLocationError(null);
+      },
+      (error) => {
+        setLocationError('Unable to get your location');
+        console.error('Geolocation error:', error);
+      }
+    );
   };
 
   const calculateDistance = (lat1:number, lon1:number, lat2:number, lon2:number) => {
@@ -72,564 +106,90 @@ const App = () => {
       setExpandedStops(newExpanded);
   };
 
-  const baseStops = [
-  // Within 50 miles
-  { 
-    name: "Gus's Drug Mural", 
-    city: "Georgetown", 
-    address: "702 e university ave, Georgetown, TX", 
-    lat: 30.6327, 
-    lon: -97.6769, 
-    distance: 25, 
-    region: "Central",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-44.jpeg?ssl=1"
-  },
-  { 
-    name: "Old Taylor High School", 
-    city: "Taylor", 
-    address: "410 west 7th st, Taylor, TX", 
-    lat: 30.5705, 
-    lon: -97.4094, 
-    distance: 35, 
-    region: "Central",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-33.jpeg?ssl=1"
-  },
-  { 
-    name: "Dead Man's Hole", 
-    city: "Marble Falls", 
-    address: "county rd 401, Marble Falls, TX", 
-    lat: 30.5783, 
-    lon: -98.2714, 
-    distance: 40, 
-    region: "Central",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-1.jpeg?ssl=1"
-  },
-  { 
-    name: "Hill Country Motorheads Museum", 
-    city: "Burnet", 
-    address: "2001 w state hwy 29, Burnet, TX", 
-    lat: 30.7580, 
-    lon: -98.2283, 
-    distance: 40, 
-    region: "Central",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-40.jpeg?ssl=1"
-  },
-  { 
-    name: "Highland Lake Squadron", 
-    city: "Burnet", 
-    address: "2402 s water st, Burnet, TX", 
-    lat: 30.7580, 
-    lon: -98.2283, 
-    distance: 40, 
-    region: "Central",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-36.jpeg?ssl=1"
-  },
-  { 
-    name: "The Gas Station", 
-    city: "Bastrop", 
-    address: "1073 tx 304, Bastrop, TX", 
-    lat: 30.1102, 
-    lon: -97.3152, 
-    distance: 45, 
-    region: "Central",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-41.jpeg?ssl=1"
-  },
-  { 
-    name: "LBJ Boyhood Home", 
-    city: "Johnson City", 
-    address: "200 e elm st, Johnson City, TX", 
-    lat: 30.2769, 
-    lon: -98.4072, 
-    distance: 48, 
-    region: "Central",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-39.jpeg?ssl=1"
-  },
-  
-  // 51-100 miles
-  { 
-    name: "Driftwood Store", 
-    city: "Driftwood", 
-    address: "fm 150, Driftwood, TX", 
-    lat: 30.1069, 
-    lon: -98.0308, 
-    distance: 55, 
-    region: "Hill Country",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-32.jpeg?ssl=1"
-  },
-  { 
-    name: "Fischer Store", 
-    city: "Fischer", 
-    address: "4040 fm 484, Fischer, TX", 
-    lat: 29.9697, 
-    lon: -98.2536, 
-    distance: 60, 
-    region: "Hill Country",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-19.jpeg?ssl=1"
-  },
-  { 
-    name: "Flying L Ranch Resort", 
-    city: "Bandera", 
-    address: "675 flying l drive, Bandera, TX", 
-    lat: 29.7269, 
-    lon: -99.0736, 
-    distance: 70, 
-    region: "Hill Country",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-10.jpeg?ssl=1"
-  },
-  { 
-    name: "Waring General Store (ALT)", 
-    city: "Waring", 
-    address: "544 waring welfare rd, Waring, TX", 
-    lat: 29.9406, 
-    lon: -98.7814, 
-    distance: 75, 
-    region: "Hill Country",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/%E2%80%8EWARING-GENERAL-STORE.%E2%80%8E001-1.png?ssl=1"
-  },
-  { 
-    name: "Castell General Store", 
-    city: "Castell", 
-    address: "19522 w ranch road 152, Castell, TX", 
-    lat: 30.6769, 
-    lon: -99.0914, 
-    distance: 80, 
-    region: "Hill Country",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-13.jpeg?ssl=1"
-  },
-  { 
-    name: "The Shop", 
-    city: "Waxahachie", 
-    address: "315 w main st, suite 13, Waxahachie, TX", 
-    lat: 32.3868, 
-    lon: -96.8483, 
-    distance: 95, 
-    region: "North",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-47.jpeg?ssl=1"
-  },
-  { 
-    name: "Frio Canyon Motorcycle Shop", 
-    city: "Leakey", 
-    address: "657 ranch road 337, Leakey, TX", 
-    lat: 29.7289, 
-    lon: -99.7608, 
-    distance: 100, 
-    region: "Hill Country",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-23.jpeg?ssl=1"
-  },
-  
-  // 101-150 miles
-  { 
-    name: "Washington on the Brazos", 
-    city: "Washington", 
-    address: "23400 park road 12, Washington, TX", 
-    lat: 30.3319, 
-    lon: -96.1550, 
-    distance: 105, 
-    region: "Central East",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-11.jpeg?ssl=1"
-  },
-  { 
-    name: "Blue Bell Creamery", 
-    city: "Brenham", 
-    address: "1101 south blue bell road, Brenham, TX", 
-    lat: 30.1669, 
-    lon: -96.3978, 
-    distance: 110, 
-    region: "Central East",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-12.jpeg?ssl=1"
-  },
-  { 
-    name: "Classic Rock Cafe", 
-    city: "Navasota", 
-    address: "129 e Washington ave, Navasota, TX", 
-    lat: 30.3880, 
-    lon: -96.0878, 
-    distance: 110, 
-    region: "Central East",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-27.jpeg?ssl=1"
-  },
-  { 
-    name: "Welcome General Store", 
-    city: "Welcome", 
-    address: "12528 fm109, Welcome, TX", 
-    lat: 30.0347, 
-    lon: -96.3478, 
-    distance: 115, 
-    region: "Central East",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-7.jpeg?ssl=1"
-  },
-  { 
-    name: "Leona General Store", 
-    city: "Leona", 
-    address: "136 Leona blvd n, Leona, TX", 
-    lat: 31.1569, 
-    lon: -95.9653, 
-    distance: 120, 
-    region: "Central East",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-21.jpeg?ssl=1"
-  },
-  { 
-    name: "Tex Miller's", 
-    city: "Cameron", 
-    address: "104 n fannin ave, Cameron, TX", 
-    lat: 30.8530, 
-    lon: -96.9708, 
-    distance: 125, 
-    region: "Central East",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-22.jpeg?ssl=1"
-  },
-  { 
-    name: "Edge General Store", 
-    city: "Hearne", 
-    address: "7250 edge cut off road, Hearne, TX", 
-    lat: 30.8786, 
-    lon: -96.5928, 
-    distance: 130, 
-    region: "Central East",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-30.jpeg?ssl=1"
-  },
-  { 
-    name: "Rosebud Historical Museum", 
-    city: "Rosebud", 
-    address: "117 n 2nd st, Rosebud, TX", 
-    lat: 31.0764, 
-    lon: -96.9786, 
-    distance: 135, 
-    region: "Central East",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-31.jpeg?ssl=1"
-  },
-  { 
-    name: "Texas Sidecar Co", 
-    city: "Teague", 
-    address: "210 elm street, Teague, TX", 
-    lat: 31.6236, 
-    lon: -96.2831, 
-    distance: 140, 
-    region: "Central East",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-4.jpeg?ssl=1"
-  },
-  { 
-    name: "Cindy Walker Mural", 
-    city: "Mexia", 
-    address: "McKinney st, Mexia, TX", 
-    lat: 31.6797, 
-    lon: -96.4822, 
-    distance: 140, 
-    region: "Central East",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-46.jpeg?ssl=1"
-  },
-  { 
-    name: "Motorcycle Gear", 
-    city: "Plano", 
-    address: "2637 Summit ave, Plano, TX", 
-    lat: 33.0198, 
-    lon: -96.6989, 
-    distance: 145, 
-    region: "North",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-2.jpeg?ssl=1"
-  },
-  { 
-    name: "Moto Liberty", 
-    city: "Addison", 
-    address: "15402 midway road, Addison, TX", 
-    lat: 32.9540, 
-    lon: -96.8353, 
-    distance: 145, 
-    region: "North",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-6.jpeg?ssl=1"
-  },
-  { 
-    name: "Riders Bike Supply", 
-    city: "Lewisville", 
-    address: "101 e southwest pkwy, Lewisville, TX", 
-    lat: 33.0462, 
-    lon: -96.9942, 
-    distance: 145, 
-    region: "North",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-37.jpeg?ssl=1"
-  },
-  { 
-    name: "Welcome to Celina Mural", 
-    city: "Celina", 
-    address: "732 e pecan st, Celina, TX", 
-    lat: 33.3245, 
-    lon: -96.7845, 
-    distance: 150, 
-    region: "North",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-42.jpeg?ssl=1"
-  },
-  
-  // 151-200 miles
-  { 
-    name: "Battle Creek Burial Ground", 
-    city: "Dawson", 
-    address: "state hwy 31, Dawson, TX", 
-    lat: 31.8944, 
-    lon: -96.7100, 
-    distance: 155, 
-    region: "Northeast",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-8.jpeg?ssl=1"
-  },
-  { 
-    name: "Calaboose", 
-    city: "Kemp", 
-    address: "106 w 11th st, Kemp, TX", 
-    lat: 32.4426, 
-    lon: -96.2286, 
-    distance: 160, 
-    region: "Northeast",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-29.jpeg?ssl=1"
-  },
-  { 
-    name: "Leonard Pharmacy", 
-    city: "Leonard", 
-    address: "122 w collin st, Leonard, TX", 
-    lat: 33.3784, 
-    lon: -96.2464, 
-    distance: 165, 
-    region: "Northeast",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-15.jpeg?ssl=1"
-  },
-  { 
-    name: "Van Zandt County Vet Memorial (ALT)", 
-    city: "Canton", 
-    address: "1200 s trade days blvd, Canton, TX", 
-    lat: 32.5568, 
-    lon: -95.8630, 
-    distance: 170, 
-    region: "Northeast",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/%E2%80%8EALT-4-VAN-ZANDT-COUNTY-VET-MEM.%E2%80%8E001.png?ssl=1"
-  },
-  { 
-    name: "Horny Toad Bar", 
-    city: "Cranfills Gap", 
-    address: "319 N 3rd st, Cranfills Gap, TX", 
-    lat: 31.7711, 
-    lon: -97.8233, 
-    distance: 175, 
-    region: "North Central",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-5.jpeg?ssl=1"
-  },
-  { 
-    name: "Victoria County Courthouse", 
-    city: "Victoria", 
-    address: "101 n bridge st, Victoria, TX", 
-    lat: 28.8053, 
-    lon: -97.0036, 
-    distance: 180, 
-    region: "South",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-49.jpeg?ssl=1"
-  },
-  { 
-    name: "Yorktown Memorial Hospital (ALT)", 
-    city: "Yorktown", 
-    address: "728 w main st, Yorktown, TX", 
-    lat: 28.9811, 
-    lon: -97.5028, 
-    distance: 185, 
-    region: "South",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Alt-5.jpeg?ssl=1"
-  },
-  
-  // 201-250 miles
-  { 
-    name: "Gladewater Museum", 
-    city: "Gladewater", 
-    address: "w. pacific and dean, Gladewater, TX", 
-    lat: 32.5368, 
-    lon: -94.9427, 
-    distance: 210, 
-    region: "East",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-18.jpeg?ssl=1"
-  },
-  { 
-    name: "Herrman & Herrman", 
-    city: "Corpus Christi", 
-    address: "1201 3rd st, Corpus Christi, TX", 
-    lat: 27.8006, 
-    lon: -97.3964, 
-    distance: 220, 
-    region: "South",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-20.jpeg?ssl=1"
-  },
-  { 
-    name: "Rusk KOA", 
-    city: "Rusk", 
-    address: "745 fm 343 east, Rusk, TX", 
-    lat: 31.7957, 
-    lon: -95.1508, 
-    distance: 230, 
-    region: "East",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-43.jpeg?ssl=1"
-  },
-  { 
-    name: "Fort Belknap", 
-    city: "Newcastle", 
-    address: "114 fort cir, Newcastle, TX", 
-    lat: 33.1948, 
-    lon: -98.7414, 
-    distance: 240, 
-    region: "North Central",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-26.jpeg?ssl=1"
-  },
-  
-  // 251-300 miles
-  { 
-    name: "Jefferson General Store", 
-    city: "Jefferson", 
-    address: "113 e Austin st, Jefferson, TX", 
-    lat: 32.7568, 
-    lon: -94.3452, 
-    distance: 270, 
-    region: "East",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-24.jpeg?ssl=1"
-  },
-  { 
-    name: "Flying G Motorcycle Museum", 
-    city: "Joaquin", 
-    address: "10552 us 84, Joaquin, TX", 
-    lat: 31.9650, 
-    lon: -94.0497, 
-    distance: 280, 
-    region: "East",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-48.jpeg?ssl=1"
-  },
-  { 
-    name: "Museum of Gulf Coast", 
-    city: "Port Arthur", 
-    address: "700 procter st, Port Arthur, TX", 
-    lat: 29.8988, 
-    lon: -93.9402, 
-    distance: 290, 
-    region: "East",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-34.jpeg?ssl=1"
-  },
-  
-  // 301-400 miles
-  { 
-    name: "Bush Family Home", 
-    city: "Midland", 
-    address: "1412 w ohio ave, Midland, TX", 
-    lat: 31.9973, 
-    lon: -102.0779, 
-    distance: 320, 
-    region: "West",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-38.jpeg?ssl=1"
-  },
-  { 
-    name: "Garza County Museum", 
-    city: "Post", 
-    address: "119 n ave north, Post, TX", 
-    lat: 33.1912, 
-    lon: -101.3793, 
-    distance: 330, 
-    region: "Panhandle",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-28.jpeg?ssl=1"
-  },
-  { 
-    name: "Hotel Texan", 
-    city: "Seagraves", 
-    address: "302 main st, Seagraves, TX", 
-    lat: 32.9434, 
-    lon: -102.5654, 
-    distance: 350, 
-    region: "West",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-45.jpeg?ssl=1"
-  },
-  { 
-    name: "Alley Oop Land", 
-    city: "Iraan", 
-    address: "9261 alley oop lane, Iraan, TX", 
-    lat: 30.9147, 
-    lon: -101.8965, 
-    distance: 360, 
-    region: "West",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-9.jpeg?ssl=1"
-  },
-  { 
-    name: "Bob Will's Tour Bus", 
-    city: "Turkey", 
-    address: "main st, Turkey, TX", 
-    lat: 34.3942, 
-    lon: -100.8979, 
-    distance: 370, 
-    region: "Panhandle",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-14.jpeg?ssl=1"
-  },
-  { 
-    name: "The Studio Coffee", 
-    city: "Wheeler", 
-    address: "418 s main st, Wheeler, TX", 
-    lat: 35.4453, 
-    lon: -100.2743, 
-    distance: 390, 
-    region: "Panhandle",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-16.jpeg?ssl=1"
-  },
-  
-  // 401+ miles
-  { 
-    name: "Antelope Creek Leather", 
-    city: "Borger", 
-    address: "227 n Harvey st, Borger, TX", 
-    lat: 35.6678, 
-    lon: -101.3974, 
-    distance: 410, 
-    region: "Panhandle",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-35.jpeg?ssl=1"
-  },
-  { 
-    name: "Van Horn Mural (ALT)", 
-    city: "Van Horn", 
-    address: "105 w broadway st, Van Horn, TX", 
-    lat: 31.0404, 
-    lon: -104.8308, 
-    distance: 480, 
-    region: "Far West",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Alt-3.jpeg?ssl=1"
-  },
-  { 
-    name: "Prada Store (ALT)", 
-    city: "Valentine", 
-    address: "14880 us 90, Valentine, TX", 
-    lat: 30.5856, 
-    lon: -104.4822, 
-    distance: 520, 
-    region: "Far West",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Alt-2.jpeg?ssl=1"
-  },
-  { 
-    name: "Old Glory Memorial", 
-    city: "El Paso", 
-    address: "9550 gateway blvd n, El Paso, TX", 
-    lat: 31.7619, 
-    lon: -106.4850, 
-    distance: 580, 
-    region: "Far West",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-3.jpeg?ssl=1"
-  },
-  { 
-    name: "Mayor of Lajitas", 
-    city: "Lajitas", 
-    address: "21709 fm170, Lajitas, TX", 
-    lat: 29.2669, 
-    lon: -103.7653, 
-    distance: 600, 
-    region: "Far West",
-    imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-17.jpeg?ssl=1"
-  }
-];
+  const addToRoute = (stopName: string) => {
+    const newSelected = new Set(selectedForRoute);
+    if (newSelected.has(stopName)) {
+      newSelected.delete(stopName);
+    } else {
+      newSelected.add(stopName);
+    }
+    setSelectedForRoute(newSelected);
+  };
 
-  // Calculate distances based on selected starting city
-  const startCoords = cityCoordinates[startCity as keyof typeof cityCoordinates];
+  const openMultiStopRoute = () => {
+    const selectedStops = filteredStops.filter(s => selectedForRoute.has(s.name));
+    
+    if (selectedStops.length === 0) {
+      alert('Please select at least one stop for your route');
+      return;
+    }
+    
+    if (selectedStops.length === 1) {
+      // Single stop - just open it
+      const stop = selectedStops[0];
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address + ', ' + stop.city)}`, '_blank');
+      return;
+    }
+    
+    const maxStops = userLocation ? 10 : 11;
+    // Google Maps allows max 10 waypoints, so limit to 11 total stops
+    if (selectedStops.length > maxStops) {
+      alert(`Google Maps supports a maximum of ${maxStops} stops${userLocation ? ' (including your current location)' : ''}. Please select fewer stops.`);
+      return;
+    }
+    
+    let url = 'https://www.google.com/maps/dir/?api=1';
   
-  console.log('Start City:', startCity);
-  console.log('Start Coords:', startCoords);
-  console.log('First stop:', baseStops[0]);
-  
-  const stops = baseStops.map(stop => {
+    // Use current location as origin if available
+    if (userLocation) {
+      url += `&origin=${userLocation.lat},${userLocation.lon}`;
+      
+      // All selected stops become waypoints except the last one (destination)
+      if (selectedStops.length === 1) {
+        url += `&destination=${encodeURIComponent(selectedStops[0].address + ', ' + selectedStops[0].city)}`;
+      } else {
+        const destination = selectedStops[selectedStops.length - 1];
+        const waypoints = selectedStops.slice(0, -1)
+          .map(s => encodeURIComponent(`${s.address}, ${s.city}`))
+          .join('|');
+        
+        url += `&destination=${encodeURIComponent(destination.address + ', ' + destination.city)}`;
+        if (waypoints) {
+          url += `&waypoints=${waypoints}`;
+        }
+      }
+    } else {
+      // No user location - use first stop as origin
+      if (selectedStops.length === 1) {
+        const stop = selectedStops[0];
+        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address + ', ' + stop.city)}`, '_blank');
+        return;
+      }
+      
+      const origin = selectedStops[0];
+      const destination = selectedStops[selectedStops.length - 1];
+      const waypoints = selectedStops.slice(1, -1)
+        .map(s => encodeURIComponent(`${s.address}, ${s.city}`))
+        .join('|');
+      
+      url += `&origin=${encodeURIComponent(origin.address + ', ' + origin.city)}`;
+      url += `&destination=${encodeURIComponent(destination.address + ', ' + destination.city)}`;
+      
+      if (waypoints) {
+        url += `&waypoints=${waypoints}`;
+      }
+    }
+    
+    window.open(url, '_blank');
+  };
+
+  const clearRoute = () => {
+    setSelectedForRoute(new Set());
+  };
+
+  const stops: TourStop[] = baseStops.map(stop => {
     const dist = calculateDistance(startCoords.lat, startCoords.lon, stop.lat, stop.lon);
-    console.log(`Distance from ${startCity} to ${stop.city}: ${dist}`);
+    console.log(`Distance from ${userLocation ? 'current location' : startCity} to ${stop.city}: ${dist}`);
     return {
       name: stop.name,
       city: stop.city,
@@ -638,7 +198,7 @@ const App = () => {
       distance: isNaN(dist) ? stop.distance : dist,
       lat: stop.lat,
       lon: stop.lon,
-      imageUrl: stop.imageUrl  // Add this line
+      imageUrl: stop.imageUrl
     };
   });
 
@@ -800,7 +360,6 @@ const App = () => {
             Clear Progress
           </button>
         </div>
-        
         <div className="bg-gray-800 rounded-lg p-6 mb-6">
           <h3 className="text-lg font-bold text-orange-400 mb-4">Set Your Starting Location</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -816,14 +375,35 @@ const App = () => {
                 ))}
               </select>
             </div>
-            <div className="flex items-end">
-              <div className="text-sm text-gray-400">
-                Distances are calculated as straight-line ("as the crow flies") and will be slightly less than actual riding distances.
-              </div>
+            <div className="flex items-end gap-2">
+              <button
+                onClick={getUserLocation}
+                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded transition-colors whitespace-nowrap"
+                title="Use my current location"
+              >
+                <Navigation size={18} />
+                <span className="hidden sm:inline">Use My Location</span>
+              </button>
+              {userLocation && (
+                <div className="text-green-400 text-sm flex items-center gap-1">
+                  <CheckCircle size={16} />
+                  <span className="hidden sm:inline">Location set</span>
+                </div>
+              )}
+              {locationError && (
+                <div className="text-red-400 text-sm">
+                  {locationError}
+                </div>
+              )}
             </div>
           </div>
+          <div className="text-sm text-gray-400">
+            {userLocation 
+              ? 'Using your current location for distance calculations and route planning.'
+              : 'Distances are calculated as straight-line ("as the crow flies") and will be slightly less than actual riding distances.'
+            }
+          </div>
         </div>
-
         <div className="bg-gray-800 rounded-lg p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <div className="col-span-1 md:col-span-2">
@@ -867,21 +447,47 @@ const App = () => {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          {/* Icon buttons row */}
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={exportToCSV}
-              className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition-colors"
+              className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded transition-colors"
+              title="Export to CSV"
             >
               <Download size={18} />
-              Export to CSV
+              <span className="hidden sm:inline">Export</span>
             </button>
             <button
               onClick={copyAddressList}
-              className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors"
+              className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded transition-colors"
+              title="Copy Address List"
             >
-              <MapPin size={18} />
-              Copy Address List
+              <Copy size={18} />
+              <span className="hidden sm:inline">Copy List</span>
             </button>
+            <button
+              onClick={() => setShowRoutePlanner(!showRoutePlanner)}
+              className={`flex items-center justify-center gap-2 ${showRoutePlanner ? 'bg-orange-700' : 'bg-orange-600'} hover:bg-orange-700 text-white px-3 py-2 rounded transition-colors`}
+              title={showRoutePlanner ? 'Hide Route Planner' : 'Show Route Planner'}
+            >
+              <Route size={18} />
+              <span className="hidden sm:inline">{showRoutePlanner ? 'Hide' : 'Plan'} Route</span>
+            </button>
+            {visitedStops.size > 0 && (
+              <button
+                onClick={() => {
+                  if (confirm('Clear all visited stops?')) {
+                    setVisitedStops(new Set());
+                    localStorage.removeItem('visitedStops');
+                  }
+                }}
+                className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded transition-colors ml-auto"
+                title="Clear Progress"
+              >
+                <CheckCircle size={18} />
+                <span className="hidden sm:inline">Clear Progress</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -926,13 +532,86 @@ const App = () => {
             </button>
           </div>
         )}
-
+        {showRoutePlanner && (
+        <div className="bg-gradient-to-r from-orange-900 to-orange-800 rounded-lg p-6 mb-6 border border-orange-600">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-xl font-bold text-white">Route Planner</h3>
+              <p className="text-orange-200 text-sm mt-1">
+                {userLocation 
+                  ? `Route will start from your current location (max ${selectedForRoute.size}/10 stops)`
+                  : `Route will start from first selected stop (max ${selectedForRoute.size}/11 stops)`
+                }
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-white font-bold text-lg">
+                {selectedForRoute.size} selected
+              </span>
+              {selectedForRoute.size > 0 && (
+                <button
+                  onClick={clearRoute}
+                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {selectedForRoute.size > 0 && (
+            <div className="bg-orange-950 bg-opacity-50 rounded-lg p-4 mb-4">
+              <h4 className="text-orange-300 font-semibold mb-2 text-sm">Selected Route:</h4>
+              <ol className="space-y-1">
+                {filteredStops
+                  .filter(s => selectedForRoute.has(s.name))
+                  .map((stop, idx) => (
+                    <li key={stop.name} className="text-white text-sm flex items-center gap-2">
+                      <span className="bg-orange-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                        {idx + 1}
+                      </span>
+                      <span>{stop.name} ({stop.city})</span>
+                      <button
+                        onClick={() => addToRoute(stop.name)}
+                        className="text-red-400 hover:text-red-300 ml-auto text-xs"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+              </ol>
+            </div>
+          )}
+          
+          <div className="flex gap-3">
+            <button
+              onClick={openMultiStopRoute}
+              disabled={selectedForRoute.size === 0}
+              className={`flex items-center justify-center gap-2 ${
+                selectedForRoute.size === 0 
+                  ? 'bg-gray-600 cursor-not-allowed' 
+                  : 'bg-green-600 hover:bg-green-700'
+              } text-white px-6 py-3 rounded-lg transition-colors font-semibold`}
+            >
+              <Route size={20} />
+              Open Route in Google Maps
+            </button>
+            {selectedForRoute.size > 11 && (
+              <div className="flex items-center gap-2 text-yellow-300 text-sm">
+                <AlertCircle size={16} />
+                Too many stops! Max 11 allowed
+              </div>
+            )}
+          </div>
+        </div>
+      )}
         <div className="bg-gray-800 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-950">
                 <tr>
                   <th className="px-4 py-3 text-left text-orange-500">#</th>
+                  <th className="px-4 py-3 text-left text-orange-500">Route</th>
                   <th className="px-4 py-3 text-left text-orange-500">Stop Name</th>
                   <th className="px-4 py-3 text-left text-orange-500">City</th>
                   <th className="px-4 py-3 text-left text-orange-500">Address</th>
@@ -949,6 +628,14 @@ const App = () => {
                     {/* Mobile: Collapsed view */}
                     <td className="mobile-card" colSpan={6}>
                       <div className="mobile-card-header">
+                        {showRoutePlanner && (
+                          <input
+                            type="checkbox"
+                            checked={selectedForRoute.has(stop.name)}
+                            onChange={() => addToRoute(stop.name)}
+                            className="w-6 h-6 text-orange-600 bg-gray-700 border-gray-600 rounded focus:ring-orange-500 cursor-pointer flex-shrink-0"
+                          />
+                        )}
                         <button
                           onClick={() => toggleVisited(stop.name)}
                           className={`transition-colors flex-shrink-0 ${visitedStops.has(stop.name) ? 'text-green-400' : 'text-gray-600 hover:text-gray-400'}`}
@@ -1016,6 +703,16 @@ const App = () => {
                     
                     {/* Desktop: Regular table view */}
                     <td className="desktop-cell px-4 py-3 text-gray-400">{idx + 1}</td>
+                    <td className="desktop-cell px-4 py-3">  {/* Add this new cell */}
+                      {showRoutePlanner && (
+                        <input
+                          type="checkbox"
+                          checked={selectedForRoute.has(stop.name)}
+                          onChange={() => addToRoute(stop.name)}
+                          className="w-5 h-5 text-orange-600 bg-gray-700 border-gray-600 rounded focus:ring-orange-500 cursor-pointer"
+                        />
+                      )}
+                    </td>
                     <td className="desktop-cell px-4 py-3 font-semibold text-white">
                       <div className="flex items-center gap-2">
                         <button
