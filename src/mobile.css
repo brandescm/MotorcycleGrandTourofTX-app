@@ -151,10 +151,19 @@
     align-items: center;
     justify-content: center;
   }
+
+  button span.hidden.sm\:inline {
+    display: none !important;
+  }
   
   button svg {
     width: 20px !important;
     height: 20px !important;
+  }
+
+  .flex.items-center.gap-2.flex-wrap button {
+    padding: 0.75rem !important;
+    min-width: 48px;
   }
   
   /* Stack control buttons */
@@ -199,6 +208,18 @@
   tbody tr:has(.mobile-card-details.expanded) {
     z-index: 10 !important;
     position: relative;
+  }
+}
+
+/* Small mobile - icon only buttons */
+@media (max-width: 640px) {
+  /* Ensure button text is hidden on very small screens */
+  button span {
+    display: none !important;
+  }
+  
+  button span.sm\:inline {
+    display: none !important;
   }
 }
 
