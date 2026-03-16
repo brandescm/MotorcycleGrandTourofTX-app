@@ -37,7 +37,7 @@ const App = () => {
   };
 
   // Calculate distances based on selected starting city
-  const startCoords = cityCoordinates[startCity as keyof typeof cityCoordinates];
+  const startCoords = userLocation || cityCoordinates[startCity as keyof typeof cityCoordinates];
   console.log('Start City:', userLocation ? 'Current Location' : startCity);
   console.log('Start Coords:', startCoords);
   // console.log('First stop:', baseStops[0]);
@@ -326,7 +326,9 @@ const App = () => {
             </div>
             <div className="flex items-center gap-2">
               <Navigation className="text-green-400" size={16} />
-              <span>Starting from: <strong className="text-orange-400">{startCity}</strong></span>
+              <span>Starting from: <strong className="text-orange-400">
+                {userLocation ? 'Current Location' : startCity}
+                </strong></span>
             </div>
           </div>
         </div>
@@ -368,22 +370,40 @@ const App = () => {
               <select
                 value={startCity}
                 onChange={(e) => setStartCity(e.target.value)}
+                disabled={userLocation !== null} 
                 className="w-full bg-gray-900 text-white px-4 py-2 rounded border border-gray-700 focus:border-orange-500 outline-none"
               >
                 {Object.keys(cityCoordinates).map(city => (
                   <option key={city} value={city}>{city}</option>
                 ))}
               </select>
+              {userLocation && (
+                <p className="text-sm text-yellow-400 mt-1">City selection disabled while using current location</p>
+              )}
             </div>
             <div className="flex items-end gap-2">
-              <button
-                onClick={getUserLocation}
-                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded transition-colors whitespace-nowrap"
-                title="Use my current location"
-              >
-                <Navigation size={18} />
-                <span className="hidden sm:inline">Use My Location</span>
-              </button>
+              {!userLocation ? (
+                <button
+                  onClick={getUserLocation}
+                  className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded transition-colors whitespace-nowrap"
+                  title="Use my current location"
+                >
+                  <Navigation size={18} />
+                  <span className="hidden sm:inline">Use My Location</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setUserLocation(null);
+                    setLocationError(null);
+                  }}
+                  className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors whitespace-nowrap"
+                  title="Stop using current location"
+                >
+                  <Navigation size={18} className="rotate-180" />
+                  <span className="hidden sm:inline">Clear Location</span>
+                </button>
+              )}
               {userLocation && (
                 <div className="text-green-400 text-sm flex items-center gap-1">
                   <CheckCircle size={16} />
@@ -764,7 +784,7 @@ const App = () => {
 
         {/* Dynamic Distance Groups */}
         <div className="mt-6 bg-blue-900 rounded-lg p-6 border border-blue-700">
-          <h2 className="text-xl font-bold mb-3 text-blue-300">Distance Groups from {startCity}</h2>
+          <h2 className="text-xl font-bold mb-3 text-blue-300">Distance Groups from {userLocation ? 'Your Current Location' : startCity}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
             <div>
               <h3 className="font-bold text-green-400 mb-2">Close (0-50 mi)</h3>

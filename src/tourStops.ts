@@ -35,8 +35,8 @@ export const baseStops: TourStop[] = [
     name: "Dead Man's Hole", 
     city: "Marble Falls", 
     address: "county rd 401, Marble Falls, TX", 
-    lat: 30.5783, 
-    lon: -98.2714, 
+    lat: 30.52859372405988,  
+    lon: -98.26528508961898, 
     distance: 40, 
     region: "Central",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-1.jpeg?ssl=1"
@@ -86,7 +86,7 @@ export const baseStops: TourStop[] = [
   { 
     name: "Driftwood Store", 
     city: "Driftwood", 
-    address: "fm 150, Driftwood, TX", 
+    address: "14999 Ranch to Market Rd 150, Driftwood, TX 78619", 
     lat: 30.1069, 
     lon: -98.0308, 
     distance: 55, 
