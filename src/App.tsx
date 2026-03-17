@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from 'react';
-import { MapPin, Navigation, Search, Download, Map, Camera, CheckCircle, ChevronDown, Route, AlertCircle, Copy, Globe } from 'lucide-react';
+import { MapPin, Navigation, Search, Download, Map, Camera, CheckCircle, ChevronDown, Route, AlertCircle, Copy, Globe, X } from 'lucide-react';
 import './App.css'
 import './mobile.css'
 import { baseStops, type TourStop } from './tourStops';
@@ -18,8 +18,9 @@ const App = () => {
   const [locationError, setLocationError] = useState<string | null>(null);
 
   const [showMap, setShowMap] = useState(false);
-  const [mapDistanceFilter, setMapDistanceFilter] = useState(100);
+  const [distanceFilter, setDistanceFilter] = useState<number>(0);
   const mapRef = useRef<any>(null);
+  const [hideVisited, setHideVisited] = useState(false);
 
   // Approximate coordinates for distance calculations
   const cityCoordinates = {
@@ -206,6 +207,11 @@ const App = () => {
     };
   });
 
+  const maxStopDistance = Math.max(...stops.map(s => s.distance));
+  useEffect(() => {
+    setDistanceFilter(maxStopDistance);
+  }, [maxStopDistance]);
+
   const getDistanceColor = (distance: number) => {
     if (distance <= 50) {
       return 'bg-green-800 text-green-200';
@@ -225,9 +231,11 @@ const App = () => {
   const filteredStops = stops
     .filter(stop => {
       const matchesSearch = stop.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                           stop.city.toLowerCase().includes(searchTerm.toLowerCase());
+                          stop.city.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesRegion = selectedRegion === 'all' || stop.region === selectedRegion;
-      return matchesSearch && matchesRegion;
+      const matchesDistance = stop.distance <= distanceFilter;
+      const matchesVisited = !hideVisited || !visitedStops.has(stop.name);
+      return matchesSearch && matchesRegion && matchesDistance && matchesVisited;
     })
     .sort((a, b) => {
       if (sortBy === 'distance') return a.distance - b.distance;
@@ -304,36 +312,34 @@ const App = () => {
       `${i + 1}. ${s.name} - ${s.city}\n   ${s.address}\n   (${s.distance} miles)`
     ).join('\n\n');
   };
-
   useEffect(() => {
-    console.log('useEffect triggered - showMap:', showMap);
     if (!showMap) return;
     
-    // Wait for Leaflet to load
     const initMap = () => {
-      console.log('initMap called');
-      console.log('Window L exists?', typeof (window as any).L !== 'undefined');
-    
       if (typeof window === 'undefined' || !(window as any).L) {
-        console.log('Leaflet not loaded yet, retrying...');
         setTimeout(initMap, 100);
         return;
       }
       
       const L = (window as any).L;
-      console.log('Leaflet loaded successfully');
-
+      
       const centerLat = userLocation?.lat || cityCoordinates[startCity as keyof typeof cityCoordinates].lat;
       const centerLon = userLocation?.lon || cityCoordinates[startCity as keyof typeof cityCoordinates].lon;
-      console.log('Center:', centerLat, centerLon);
+
+      // const mapFilteredStops = filteredStops.filter(s => s.distance <= mapDistanceFilter);
       
-      let zoom = 8;
-      if (mapDistanceFilter <= 25) zoom = 10;
-      else if (mapDistanceFilter <= 50) zoom = 9;
-      else if (mapDistanceFilter <= 100) zoom = 8;
-      else if (mapDistanceFilter <= 200) zoom = 7;
-      else if (mapDistanceFilter <= 300) zoom = 6;
-      else zoom = 5;
+      // Auto-calculate zoom based on stops shown
+      let zoom = 6;
+      if (filteredStops.length === 0) {
+        zoom = 8;
+      } else {
+        const maxDist = Math.max(...filteredStops.map(s => s.distance));
+        if (maxDist <= 50) zoom = 9;
+        else if (maxDist <= 100) zoom = 8;
+        else if (maxDist <= 200) zoom = 7;
+        else if (maxDist <= 300) zoom = 6;
+        else zoom = 6;
+      }
       
       // Remove existing map if present
       if (mapRef.current) {
@@ -350,23 +356,27 @@ const App = () => {
         maxZoom: 19
       }).addTo(map);
       
-      // Add current location marker (blue)
+      // Blue dot: user location OR selected city
+      const blueIcon = L.divIcon({
+        className: 'custom-marker',
+        html: '<div style="background-color:#3b82f6;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></div>',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+      });
+
       if (userLocation) {
-        const blueIcon = L.divIcon({
-          className: 'custom-marker',
-          html: '<div style="background-color:#3b82f6;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></div>',
-          iconSize: [16, 16],
-          iconAnchor: [8, 8]
-        });
-        
         L.marker([userLocation.lat, userLocation.lon], { icon: blueIcon })
           .addTo(map)
           .bindPopup('<strong>Your Location</strong>');
+      } else {
+        const cityCoords = cityCoordinates[startCity as keyof typeof cityCoordinates];
+        L.marker([cityCoords.lat, cityCoords.lon], { icon: blueIcon })
+          .addTo(map)
+          .bindPopup(`<strong>${startCity}</strong><br><em>Starting city</em>`);
       }
       
-      // Add stop markers
-      const filteredMapStops = stops.filter(s => s.distance <= mapDistanceFilter);
-      filteredMapStops.forEach(stop => {
+      // Add markers for distance-filtered stops
+      filteredStops.forEach(stop => {
         const color = visitedStops.has(stop.name) ? '#22c55e' : '#f97316';
         
         const markerIcon = L.divIcon({
@@ -390,8 +400,8 @@ const App = () => {
         mapRef.current = null;
       }
     };
-  }, [showMap, mapDistanceFilter, userLocation, startCity, visitedStops, stops]);
-
+  }, [showMap, filteredStops, userLocation, startCity, visitedStops, distanceFilter]);
+  
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
       <div className="max-w-6xl mx-auto">
@@ -530,7 +540,6 @@ const App = () => {
                 />
               </div>
             </div>
-            
             <div>
               <label className="block text-sm text-gray-400 mb-2">Filter by Region</label>
               <select
@@ -543,7 +552,6 @@ const App = () => {
                 ))}
               </select>
             </div>
-            
             <div>
               <label className="block text-sm text-gray-400 mb-2">Sort By</label>
               <select
@@ -555,6 +563,32 @@ const App = () => {
                 <option value="name">Name</option>
                 <option value="city">City</option>
               </select>
+            </div>
+            <div className="col-span-1 md:col-span-2 lg:col-span-4">
+              <label className="block text-sm text-gray-400 mb-2">
+                Max Distance: {distanceFilter >= maxStopDistance ? 'All stops' : `≤ ${distanceFilter} mi`}
+              </label>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-gray-500">0</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={maxStopDistance}
+                  step={25}
+                  value={distanceFilter}
+                  onChange={(e) => setDistanceFilter(Number(e.target.value))}
+                  className="flex-grow accent-orange-500"
+                />
+                <span className="text-xs text-gray-500">{maxStopDistance} mi</span>
+                {distanceFilter < maxStopDistance && (
+                  <button
+                    onClick={() => setDistanceFilter(maxStopDistance)}
+                    className="text-xs text-gray-500 hover:text-gray-300 transition-colors whitespace-nowrap"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -577,14 +611,6 @@ const App = () => {
               <span className="hidden sm:inline">Copy List</span>
             </button>
             <button
-              onClick={() => setShowMap(!showMap)}
-              className={`flex items-center justify-center gap-2 ${showMap ? 'bg-purple-700' : 'bg-purple-600'} hover:bg-purple-700 text-white px-3 py-2 rounded transition-colors`}
-              title={showMap ? 'Hide Map View' : 'Show Map View'}
-            >
-              <Globe size={18} />
-              <span className="hidden sm:inline">{showMap ? 'Hide' : 'Show'} Map</span>
-            </button>
-            <button
               onClick={() => setShowRoutePlanner(!showRoutePlanner)}
               className={`flex items-center justify-center gap-2 ${showRoutePlanner ? 'bg-orange-700' : 'bg-orange-600'} hover:bg-orange-700 text-white px-3 py-2 rounded transition-colors`}
               title={showRoutePlanner ? 'Hide Route Planner' : 'Show Route Planner'}
@@ -592,21 +618,6 @@ const App = () => {
               <Route size={18} />
               <span className="hidden sm:inline">{showRoutePlanner ? 'Hide' : 'Plan'} Route</span>
             </button>
-            {visitedStops.size > 0 && (
-              <button
-                onClick={() => {
-                  if (confirm('Clear all visited stops?')) {
-                    setVisitedStops(new Set());
-                    localStorage.removeItem('visitedStops');
-                  }
-                }}
-                className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded transition-colors ml-auto"
-                title="Clear Progress"
-              >
-                <CheckCircle size={18} />
-                <span className="hidden sm:inline">Clear Progress</span>
-              </button>
-            )}
           </div>
         </div>
 
@@ -724,67 +735,82 @@ const App = () => {
             </div>
           </div>
         )}
+        <div className="bg-gray-800 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold text-orange-400">Stops Overview</h3>
+            <button
+              onClick={() => setShowMap(!showMap)}
+              className={`flex items-center gap-2 ${showMap ? 'bg-purple-700' : 'bg-purple-600'} hover:bg-purple-700 text-white px-4 py-2 rounded transition-colors`}
+            >
+              <Globe size={18} />
+              {showMap ? 'Hide' : 'Show'} Map
+            </button>
+          </div>
         {showMap && (
-          <div className="bg-gray-800 rounded-lg p-6 mb-6 border border-purple-600">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-xl font-bold text-purple-400">Map View</h3>
-                <p className="text-gray-400 text-sm mt-1">
-                  Showing stops within {mapDistanceFilter} miles of {userLocation ? 'your current location' : startCity}
+          <div className="mt-4">
+            <div className="flex flex-col gap-3 mb-3">
+              <div className="flex items-center justify-between">
+                <p className="text-gray-400 text-sm">
+                  Showing {filteredStops.length} stops on map
                 </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <label className="text-gray-400 text-sm whitespace-nowrap">Distance:</label>
-                <select
-                  value={mapDistanceFilter}
-                  onChange={(e) => setMapDistanceFilter(Number(e.target.value))}
-                  className="bg-gray-900 text-white px-3 py-2 rounded border border-gray-700 focus:border-purple-500 outline-none"
-                >
-                  <option value={25}>25 miles</option>
-                  <option value={50}>50 miles</option>
-                  <option value={100}>100 miles</option>
-                  <option value={150}>150 miles</option>
-                  <option value={200}>200 miles</option>
-                  <option value={300}>300 miles</option>
-                  <option value={500}>500 miles</option>
-                  <option value={1000}>All stops</option>
-                </select>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span className="text-xs text-gray-400">Visited</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                    <span className="text-xs text-gray-400">Not visited</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <span className="text-xs text-gray-400">{userLocation ? 'Your location' : 'Start city'}</span>
+                  </div>
+                </div>
               </div>
             </div>
-            
-            {/* Filter info */}
-            <div className="bg-purple-900 bg-opacity-30 rounded-lg p-3 mb-4">
-              <p className="text-purple-200 text-sm">
-                <strong>{stops.filter(s => s.distance <= mapDistanceFilter).length}</strong> stops within {mapDistanceFilter} miles
-              </p>
-            </div>
-            
+
             {/* Embedded OpenStreetMap */}
-            <div id="osm-map" className="w-full h-[500px] rounded-lg border border-gray-700 mb-4"></div>
-            
-            {/* Stops list */}
-            <div className="mt-4">
-              <h4 className="text-sm font-semibold text-gray-400 mb-2">Stops in range:</h4>
-              <div className="max-h-60 overflow-y-auto bg-gray-900 rounded-lg p-3">
-                {stops
-                  .filter(s => s.distance <= mapDistanceFilter)
-                  .map((stop) => (
-                    <div 
-                      key={stop.name}
-                      className="flex items-center justify-between py-2 border-b border-gray-700 last:border-b-0"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${visitedStops.has(stop.name) ? 'bg-green-500' : 'bg-orange-500'}`}></div>
-                        <span className="text-sm text-white">{stop.name}</span>
-                      </div>
-                      <span className="text-xs text-gray-400">{stop.distance} mi</span>
-                    </div>
-                  ))}
-              </div>
-            </div>
+            <div id="osm-map" className="w-full h-[500px] rounded-lg border border-gray-700"></div>
           </div>
         )}
+        </div>
         <div className="bg-gray-800 rounded-lg overflow-hidden">
+          {/* Table header bar */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+            <span className="text-sm text-gray-400">
+              {filteredStops.length} stops shown
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setHideVisited(!hideVisited)}
+                className={`flex items-center gap-2 ${
+                  hideVisited ? 'bg-green-700 hover:bg-green-800' : 'bg-gray-600 hover:bg-gray-500'
+                } text-white px-3 py-2 rounded transition-colors`}
+                title={hideVisited ? 'Showing unvisited only' : 'Showing all stops'}
+              >
+                <CheckCircle size={18} fill={hideVisited ? '#f97316' : 'none' } />
+                <span className="hidden sm:inline">{hideVisited ? 'Unvisited Only' : 'Show All'}</span>
+              </button>
+              {visitedStops.size > 0 && (
+                <button
+                  onClick={() => {
+                    if (confirm('Clear all visited stops?')) {
+                      setVisitedStops(new Set());
+                      localStorage.removeItem('visitedStops');
+                    }
+                  }}
+                  style={{ backgroundColor: '#dc2626' }}
+                  className="flex items-center gap-2 text-white px-3 py-2 rounded transition-colors hover:opacity-90"
+                  title="Clear Progress"
+                >
+                  <X size={18} />
+                  <span className="hidden sm:inline">Clear Progress</span>
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-950">
@@ -820,7 +846,7 @@ const App = () => {
                           className={`transition-colors flex-shrink-0 ${visitedStops.has(stop.name) ? 'text-green-400' : 'text-gray-600 hover:text-gray-400'}`}
                           title={visitedStops.has(stop.name) ? 'Mark as not visited' : 'Mark as visited'}
                         >
-                          <CheckCircle size={20} fill={visitedStops.has(stop.name) ? 'currentColor' : 'none'} />
+                          <CheckCircle size={20} fill={visitedStops.has(stop.name) ? 'currentColor' : '#f97316'} />
                         </button>
                         
                         <span className={`flex-grow font-semibold ${visitedStops.has(stop.name) ? 'line-through opacity-60' : ''}`}>
@@ -940,34 +966,6 @@ const App = () => {
             </table>
           </div>
         </div>
-
-        {/* Dynamic Distance Groups */}
-        <div className="mt-6 bg-blue-900 rounded-lg p-6 border border-blue-700">
-          <h2 className="text-xl font-bold mb-3 text-blue-300">Distance Groups from {userLocation ? 'Your Current Location' : startCity}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-            <div>
-              <h3 className="font-bold text-green-400 mb-2">Close (0-50 mi)</h3>
-              <p className="text-gray-300">{stops.filter(s => s.distance <= 50).length} stops - Perfect for short day trips</p>
-            </div>
-            <div>
-              <h3 className="font-bold text-blue-400 mb-2">Near (51-150 mi)</h3>
-              <p className="text-gray-300">{stops.filter(s => s.distance > 50 && s.distance <= 150).length} stops - Good for day trips or overnights</p>
-            </div>
-            <div>
-              <h3 className="font-bold text-yellow-400 mb-2">Medium (151-250 mi)</h3>
-              <p className="text-gray-300">{stops.filter(s => s.distance > 150 && s.distance <= 250).length} stops - Weekend trips recommended</p>
-            </div>
-            <div>
-              <h3 className="font-bold text-orange-400 mb-2">Far (251-400 mi)</h3>
-              <p className="text-gray-300">{stops.filter(s => s.distance > 250 && s.distance <= 400).length} stops - 2-3 day trips</p>
-            </div>
-            <div>
-              <h3 className="font-bold text-red-400 mb-2">Very Far (401+ mi)</h3>
-              <p className="text-gray-300">{stops.filter(s => s.distance > 400).length} stops - Multi-day expeditions</p>
-            </div>
-          </div>
-        </div>
-
         <div className="mt-6 bg-gray-800 rounded-lg p-6">
           <h2 className="text-xl font-bold mb-3 text-orange-400">Special Stops</h2>
           <ul className="space-y-2 text-gray-300 text-sm">
