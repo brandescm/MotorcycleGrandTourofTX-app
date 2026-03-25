@@ -761,7 +761,7 @@ const App = () => {
           </div>
         )}
         <div className="bg-gray-800 rounded-lg p-4 mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between px-4">
             <h3 className="text-lg font-bold text-orange-400">Stops Overview</h3>
             <button
               onClick={() => setShowMap(!showMap)}
