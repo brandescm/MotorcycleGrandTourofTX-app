@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { MapPin, Navigation, Search, Download, Map, Camera, CheckCircle, ChevronDown, Route, AlertCircle, Copy, Globe, X } from 'lucide-react';
 import './App.css'
@@ -22,7 +21,6 @@ const App = () => {
   const mapRef = useRef<any>(null);
   const [hideVisited, setHideVisited] = useState(false);
 
-  // Approximate coordinates for distance calculations
   const cityCoordinates = {
     'Liberty Hill': { lat: 30.6660, lon: -97.9225 },
     'Austin': { lat: 30.2672, lon: -97.7431 },
@@ -41,13 +39,8 @@ const App = () => {
     'Tyler': { lat: 32.3513, lon: -95.3011 }
   };
 
-  // Calculate distances based on selected starting city
   const startCoords = userLocation || cityCoordinates[startCity as keyof typeof cityCoordinates];
-  console.log('Start City:', userLocation ? 'Current Location' : startCity);
-  console.log('Start Coords:', startCoords);
-  // console.log('First stop:', baseStops[0]);
 
-  // Get user's location
   const getUserLocation = () => {
     if (!navigator.geolocation) {
       setLocationError('Geolocation not supported by your browser');
@@ -69,16 +62,15 @@ const App = () => {
     );
   };
 
-  const calculateDistance = (lat1:number, lon1:number, lat2:number, lon2:number) => {
-    const R = 3959; // Earth's radius in miles
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 3959;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
               Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
               Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    const distance = R * c;
-    return Math.round(distance);
+    return Math.round(R * c);
   };
 
   const toggleVisited = (stopName: string) => {
@@ -89,12 +81,10 @@ const App = () => {
       newVisited.add(stopName);
     }
     setVisitedStops(newVisited);
-    // Save to localStorage
     localStorage.setItem('visitedStops', JSON.stringify(Array.from(newVisited)));
   };
 
   const [visitedStops, setVisitedStops] = useState<Set<string>>(() => {
-    // Load from localStorage on initial render
     const saved = localStorage.getItem('visitedStops');
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
@@ -102,13 +92,13 @@ const App = () => {
   const [expandedStops, setExpandedStops] = useState<Set<number>>(new Set());
 
   const toggleExpanded = (idx: number) => {
-      const newExpanded = new Set(expandedStops);
-      if (newExpanded.has(idx)) {
-        newExpanded.delete(idx);
-      } else {
-        newExpanded.add(idx);
-      }
-      setExpandedStops(newExpanded);
+    const newExpanded = new Set(expandedStops);
+    if (newExpanded.has(idx)) {
+      newExpanded.delete(idx);
+    } else {
+      newExpanded.add(idx);
+    }
+    setExpandedStops(newExpanded);
   };
 
   const getAddressFromCoords = async (lat: number, lon: number): Promise<string> => {
@@ -121,20 +111,17 @@ const App = () => {
 
   const openSingleStop = async (stop: TourStop) => {
     let url = 'https://www.google.com/maps/dir/?api=1';
-    console.log('Opening single stop route for:', stop.name);
     try {
-      console.log('Attempting to get origin address for single stop route');
       if (userLocation) {
         const originAddress = await getAddressFromCoords(userLocation.lat, userLocation.lon);
         url += `&origin=${encodeURIComponent(originAddress)}`;
-        console.log('Using user location as origin:', originAddress);
+      } else {
+        url += `&origin=${encodeURIComponent(startCity + ', Texas')}`;
       }
     } catch (err) {
       console.error('Failed to get origin address:', err);
     }
-    
     url += `&destination=${encodeURIComponent(`${stop.address}, ${stop.city}`)}`;
-    console.log('Opening single stop URL:', url);
     window.open(url, '_blank');
   };
 
@@ -150,73 +137,43 @@ const App = () => {
 
   const openMultiStopRoute = async () => {
     const selectedStops = filteredStops.filter(s => selectedForRoute.has(s.name));
+
     if (selectedStops.length === 0) {
       alert('Please select at least one stop for your route');
       return;
     }
 
     const maxStops = userLocation ? 10 : 11;
-    // Google Maps allows max 10 waypoints, so limit to 11 total stops
     if (selectedStops.length > maxStops) {
       alert(`Google Maps supports a maximum of ${maxStops} stops${userLocation ? ' (including your current location)' : ''}. Please select fewer stops.`);
       return;
     }
-    
+
     let url = 'https://www.google.com/maps/dir/?api=1';
-  
-    // Use current location as origin if available
+
+    // Resolve origin
     if (userLocation) {
       const originAddress = await getAddressFromCoords(userLocation.lat, userLocation.lon);
       url += `&origin=${encodeURIComponent(originAddress)}`;
-      // url += `&origin=${userLocation.lat},${userLocation.lon}`;
-      
-      // All selected stops become waypoints except the last one (destination)
-      if (selectedStops.length === 1) {
-        url += `&destination=${encodeURIComponent(selectedStops[0].address + ', ' + selectedStops[0].city)}`;
-      } else {
-        const destination = selectedStops[selectedStops.length - 1];
-        const waypoints = selectedStops.slice(0, -1)
-          .map(s => encodeURIComponent(`${s.address}, ${s.city}`))
-          .join('|');
-        
-        url += `&destination=${encodeURIComponent(destination.address + ', ' + destination.city)}`;
-        if (waypoints) {
-          url += `&waypoints=${waypoints}`;
-        }
-      }
     } else {
-      // No user location - use first stop as origin
-      if (selectedStops.length === 1) {
-        const stop = selectedStops[0];
-        console.log('Early return: single stop');
-        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address + ', ' + stop.city)}`, '_blank');
-        return;
-      }
-      
-      const origin = selectedStops[0];
-      const destination = selectedStops[selectedStops.length - 1];
-      const waypoints = selectedStops.slice(1, -1)
-        .map(s => encodeURIComponent(`${s.address}, ${s.city}`))
-        .join('|');
-      
-      url += `&origin=${encodeURIComponent(origin.address + ', ' + origin.city)}`;
-      url += `&destination=${encodeURIComponent(destination.address + ', ' + destination.city)}`;
-      
-      if (waypoints) {
-        url += `&waypoints=${waypoints}`;
-      }
+      url += `&origin=${encodeURIComponent(startCity + ', Texas')}`;
     }
-    console.log('Opening route URL:', url);
+
+    // Resolve destination and waypoints
+    const destination = selectedStops[selectedStops.length - 1];
+    const waypoints = selectedStops.slice(0, -1)
+      .map(s => encodeURIComponent(`${s.address}, ${s.city}`))
+      .join('|');
+
+    url += `&destination=${encodeURIComponent(`${destination.address}, ${destination.city}`)}`;
+    if (waypoints) url += `&waypoints=${waypoints}`;
+
     window.open(url, '_blank');
   };
-
-  const clearRoute = () => {
-    setSelectedForRoute(new Set());
-  };
+  const clearRoute = () => setSelectedForRoute(new Set());
 
   const stops: TourStop[] = baseStops.map(stop => {
     const dist = calculateDistance(startCoords.lat, startCoords.lon, stop.lat, stop.lon);
-    console.log(`Distance from ${userLocation ? 'current location' : startCity} to ${stop.city}: ${dist}`);
     return {
       name: stop.name,
       city: stop.city,
@@ -235,25 +192,19 @@ const App = () => {
   }, [maxStopDistance]);
 
   const getDistanceColor = (distance: number) => {
-    if (distance <= 50) {
-      return 'bg-green-800 text-green-200';
-    } else if (distance <= 150) {
-      return 'bg-blue-800 text-blue-200';
-    } else if (distance <= 250) {
-      return 'bg-yellow-800 text-yellow-200';
-    } else if (distance <= 400) {
-      return 'bg-orange-800 text-orange-200';
-    } else {
-      return 'bg-red-800 text-red-200';
-    }
+    if (distance <= 50) return 'bg-green-800 text-green-200';
+    if (distance <= 150) return 'bg-blue-800 text-blue-200';
+    if (distance <= 250) return 'bg-yellow-800 text-yellow-200';
+    if (distance <= 400) return 'bg-orange-800 text-orange-200';
+    return 'bg-red-800 text-red-200';
   };
 
   const regions = ['all', 'Close', 'Hill Country', 'North', 'Central East', 'Northeast', 'North Central', 'East', 'South', 'West', 'Panhandle', 'Far West'];
 
   const filteredStops = stops
     .filter(stop => {
-      const matchesSearch = stop.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          stop.city.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = stop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            stop.city.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesRegion = selectedRegion === 'all' || stop.region === selectedRegion;
       const matchesDistance = stop.distance <= distanceFilter;
       const matchesVisited = !hideVisited || !visitedStops.has(stop.name);
@@ -273,17 +224,11 @@ const App = () => {
     const csv = [
       ['Stop Name', 'City', 'Address', 'Distance (mi)', 'Region'].join(','),
       ...filteredStops.map(s => [
-        `"${s.name}"`,
-        `"${s.city}"`,
-        `"${s.address}"`,
-        s.distance,
-        `"${s.region}"`
+        `"${s.name}"`, `"${s.city}"`, `"${s.address}"`, s.distance, `"${s.region}"`
       ].join(','))
     ].join('\n');
-    
+
     setShowExport(true);
-    
-    // Try to download
     try {
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
@@ -300,13 +245,11 @@ const App = () => {
   };
 
   const copyAddressList = () => {
-    const text = filteredStops.map((s, i) => 
+    const text = filteredStops.map((s, i) =>
       `${i + 1}. ${s.name} - ${s.city}\n   ${s.address}\n   (${s.distance} miles)`
     ).join('\n\n');
-    
+
     setShowCopyText(true);
-    
-    // Try to copy
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(() => {
         alert('Address list copied to clipboard!');
@@ -316,41 +259,31 @@ const App = () => {
     }
   };
 
-  const getCSVText = () => {
-    return [
-      ['Stop Name', 'City', 'Address', 'Distance (mi)', 'Region'].join(','),
-      ...filteredStops.map(s => [
-        `"${s.name}"`,
-        `"${s.city}"`,
-        `"${s.address}"`,
-        s.distance,
-        `"${s.region}"`
-      ].join(','))
-    ].join('\n');
-  };
+  const getCSVText = () => [
+    ['Stop Name', 'City', 'Address', 'Distance (mi)', 'Region'].join(','),
+    ...filteredStops.map(s => [
+      `"${s.name}"`, `"${s.city}"`, `"${s.address}"`, s.distance, `"${s.region}"`
+    ].join(','))
+  ].join('\n');
 
-  const getAddressListText = () => {
-    return filteredStops.map((s, i) => 
+  const getAddressListText = () =>
+    filteredStops.map((s, i) =>
       `${i + 1}. ${s.name} - ${s.city}\n   ${s.address}\n   (${s.distance} miles)`
     ).join('\n\n');
-  };
+
   useEffect(() => {
     if (!showMap) return;
-    
+
     const initMap = () => {
       if (typeof window === 'undefined' || !(window as any).L) {
         setTimeout(initMap, 100);
         return;
       }
-      
+
       const L = (window as any).L;
-      
       const centerLat = userLocation?.lat || cityCoordinates[startCity as keyof typeof cityCoordinates].lat;
       const centerLon = userLocation?.lon || cityCoordinates[startCity as keyof typeof cityCoordinates].lon;
 
-      // const mapFilteredStops = filteredStops.filter(s => s.distance <= mapDistanceFilter);
-      
-      // Auto-calculate zoom based on stops shown
       let zoom = 6;
       if (filteredStops.length === 0) {
         zoom = 8;
@@ -362,23 +295,17 @@ const App = () => {
         else if (maxDist <= 300) zoom = 6;
         else zoom = 6;
       }
-      
-      // Remove existing map if present
-      if (mapRef.current) {
-        mapRef.current.remove();
-      }
-      
-      // Initialize map
+
+      if (mapRef.current) mapRef.current.remove();
+
       const map = L.map('osm-map').setView([centerLat, centerLon], zoom);
       mapRef.current = map;
-      
-      // Add OpenStreetMap tiles
+
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
         maxZoom: 19
       }).addTo(map);
-      
-      // Blue dot: user location OR selected city
+
       const blueIcon = L.divIcon({
         className: 'custom-marker',
         html: '<div style="background-color:#3b82f6;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></div>',
@@ -396,26 +323,23 @@ const App = () => {
           .addTo(map)
           .bindPopup(`<strong>${startCity}</strong><br><em>Starting city</em>`);
       }
-      
-      // Add markers for distance-filtered stops
+
       filteredStops.forEach(stop => {
         const color = visitedStops.has(stop.name) ? '#22c55e' : '#f97316';
-        
         const markerIcon = L.divIcon({
           className: 'custom-marker',
           html: `<div style="background-color:${color};width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></div>`,
           iconSize: [14, 14],
           iconAnchor: [7, 7]
         });
-        
         L.marker([stop.lat, stop.lon], { icon: markerIcon })
           .addTo(map)
           .bindPopup(`<strong>${stop.name}</strong><br>${stop.city}<br>${stop.distance} miles`);
       });
     };
-    
+
     initMap();
-    
+
     return () => {
       if (mapRef.current) {
         mapRef.current.remove();
@@ -423,10 +347,19 @@ const App = () => {
       }
     };
   }, [showMap, filteredStops, userLocation, startCity, visitedStops, distanceFilter]);
-  
+
+  const clearProgress = () => {
+    if (confirm('Clear all visited stops?')) {
+      setVisitedStops(new Set());
+      localStorage.removeItem('visitedStops');
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="app-container bg-gray-900 text-white">
+      <div className="app-inner">
+
+        {/* ── Header ── */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-orange-500 mb-2">
             2026 Texas Motorcycle Tour Stops
@@ -434,9 +367,9 @@ const App = () => {
           <p className="text-xs text-gray-500">App Version: {APP_VERSION}</p>
           <p className="text-gray-400">Organized by Distance from Your Starting Point</p>
           <div className="flex justify-center gap-6 mt-4 text-sm flex-wrap">
-            <a 
-              href="https://motorcyclegrandtouroftexas.com/picture-submission-portal-2026-tour/" 
-              target="_blank" 
+            <a
+              href="https://motorcyclegrandtouroftexas.com/picture-submission-portal-2026-tour/"
+              target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-sm text-green-400 hover:text-green-300 transition-colors font-medium"
             >
@@ -451,11 +384,13 @@ const App = () => {
               <Navigation className="text-green-400" size={16} />
               <span>Starting from: <strong className="text-orange-400">
                 {userLocation ? 'Current Location' : startCity}
-                </strong></span>
+              </strong></span>
             </div>
           </div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-4 mb-6">
+
+        {/* ── Progress ── */}
+        <div className="section-card">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-lg font-bold text-orange-400">Your Progress</h3>
             <span className="text-2xl font-bold text-green-400">
@@ -463,7 +398,7 @@ const App = () => {
             </span>
           </div>
           <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
-            <div 
+            <div
               className="bg-gradient-to-r from-green-500 to-green-400 h-full transition-all duration-500"
               style={{ width: `${(visitedStops.size / stops.length) * 100}%` }}
             />
@@ -474,54 +409,49 @@ const App = () => {
             {visitedStops.size >= 50 && " • 🎉 Tour Complete! You earned the 50 Stop Finisher rocker!"}
           </p>
           <button
-            onClick={() => {
-              if (confirm('Clear all visited stops?')) {
-                setVisitedStops(new Set());
-                localStorage.removeItem('visitedStops');
-              }
-            }}
-            className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
+            onClick={clearProgress}
+            className="mt-3 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
           >
-            Clear Progress
+            <X size={16} />
+            <span className="hidden sm:inline">Clear Progress</span>
           </button>
         </div>
-        <div className="bg-gray-800 rounded-lg p-6 mb-6">
+
+        {/* ── Starting Location ── */}
+        <div className="section-card">
           <h3 className="text-lg font-bold text-orange-400 mb-4">Set Your Starting Location</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm text-gray-400 mb-2">Choose a City</label>
-              <select
-                value={startCity}
-                onChange={(e) => setStartCity(e.target.value)}
-                disabled={userLocation !== null} 
-                className="w-full bg-gray-900 text-white px-4 py-2 rounded border border-gray-700 focus:border-orange-500 outline-none"
-              >
-                {Object.keys(cityCoordinates).map(city => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
-              {userLocation && (
-                <p className="text-sm text-yellow-400 mt-1">City selection disabled while using current location</p>
-              )}
-            </div>
+            {!userLocation && (
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Choose a City</label>
+                <select
+                  value={startCity}
+                  onChange={(e) => setStartCity(e.target.value)}
+                  disabled={userLocation !== null}
+                  className="w-full bg-gray-900 text-white px-4 py-2 rounded border border-gray-700 focus:border-orange-500 outline-none"
+                >
+                  {Object.keys(cityCoordinates).map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+                {userLocation && (
+                  <p className="text-sm text-yellow-400 mt-1">City selection disabled while using current location</p>
+                )}
+              </div>
+            )}
             <div className="flex items-end gap-2">
               {!userLocation ? (
                 <button
                   onClick={getUserLocation}
                   className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded transition-colors whitespace-nowrap"
-                  title="Use my current location"
                 >
                   <Navigation size={18} />
                   <span className="hidden sm:inline">Use My Location</span>
                 </button>
               ) : (
                 <button
-                  onClick={() => {
-                    setUserLocation(null);
-                    setLocationError(null);
-                  }}
+                  onClick={() => { setUserLocation(null); setLocationError(null); }}
                   className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors whitespace-nowrap"
-                  title="Stop using current location"
                 >
                   <Navigation size={18} className="rotate-180" />
                   <span className="hidden sm:inline">Clear Location</span>
@@ -534,20 +464,20 @@ const App = () => {
                 </div>
               )}
               {locationError && (
-                <div className="text-red-400 text-sm">
-                  {locationError}
-                </div>
+                <div className="text-red-400 text-sm">{locationError}</div>
               )}
             </div>
           </div>
           <div className="text-sm text-gray-400">
-            {userLocation 
+            {userLocation
               ? 'Using your current location for distance calculations and route planning.'
               : 'Distances are calculated as straight-line ("as the crow flies") and will be slightly less than actual riding distances.'
             }
           </div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-6 mb-6">
+
+        {/* ── Filters ── */}
+        <div className="section-card">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <div className="col-span-1 md:col-span-2 lg:col-span-4">
               <h3 className="text-lg font-bold text-orange-400">Stop Filters</h3>
@@ -617,7 +547,6 @@ const App = () => {
             </div>
           </div>
 
-          {/* Icon buttons row */}
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={exportToCSV}
@@ -646,8 +575,9 @@ const App = () => {
           </div>
         </div>
 
+        {/* ── CSV Export ── */}
         {showExport && (
-          <div className="bg-gray-800 rounded-lg p-6 mb-6">
+          <div className="section-card">
             <h3 className="text-lg font-bold text-green-400 mb-3">CSV Data (Select All & Copy)</h3>
             <textarea
               readOnly
@@ -656,19 +586,17 @@ const App = () => {
               onClick={(e) => (e.target as HTMLTextAreaElement).select()}
             />
             <p className="text-gray-400 text-sm mt-2">
-              Select all the text above, copy it, and paste into a text file. Save as .csv to open in Excel or import to route planners.
+              Select all the text above, copy it, and paste into a text file. Save as .csv to open in Excel.
             </p>
-            <button
-              onClick={() => setShowExport(false)}
-              className="mt-3 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded"
-            >
+            <button onClick={() => setShowExport(false)} className="mt-3 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded">
               Close
             </button>
           </div>
         )}
 
+        {/* ── Copy List ── */}
         {showCopyText && (
-          <div className="bg-gray-800 rounded-lg p-6 mb-6">
+          <div className="section-card">
             <h3 className="text-lg font-bold text-blue-400 mb-3">Address List (Select All & Copy)</h3>
             <textarea
               readOnly
@@ -679,30 +607,27 @@ const App = () => {
             <p className="text-gray-400 text-sm mt-2">
               Select all the text above and copy it. You can paste this into route planning apps.
             </p>
-            <button
-              onClick={() => setShowCopyText(false)}
-              className="mt-3 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded"
-            >
+            <button onClick={() => setShowCopyText(false)} className="mt-3 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded">
               Close
             </button>
           </div>
         )}
+
+        {/* ── Route Planner ── */}
         {showRoutePlanner && (
-          <div className="bg-gradient-to-r from-orange-900 to-orange-800 rounded-lg p-6 mb-6 border border-orange-600">
+          <div className="section-card bg-gradient-to-r from-orange-900 to-orange-800 border border-orange-600">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-xl font-bold text-white">Route Planner</h3>
                 <p className="text-orange-200 text-sm mt-1">
-                  {userLocation 
+                  {userLocation
                     ? `Route will start from your current location (max ${selectedForRoute.size}/10 stops)`
                     : `Route will start from first selected stop (max ${selectedForRoute.size}/11 stops)`
                   }
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-white font-bold text-lg">
-                  {selectedForRoute.size} selected
-                </span>
+                <span className="text-white font-bold text-lg">{selectedForRoute.size} selected</span>
                 {selectedForRoute.size > 0 && (
                   <button
                     onClick={clearRoute}
@@ -713,7 +638,7 @@ const App = () => {
                 )}
               </div>
             </div>
-            
+
             {selectedForRoute.size > 0 && (
               <div className="bg-orange-950 bg-opacity-50 rounded-lg p-4 mb-4">
                 <h4 className="text-orange-300 font-semibold mb-2 text-sm">Selected Route:</h4>
@@ -737,15 +662,13 @@ const App = () => {
                 </ol>
               </div>
             )}
-            
+
             <div className="flex gap-3">
               <button
                 onClick={openMultiStopRoute}
                 disabled={selectedForRoute.size === 0}
                 className={`flex items-center justify-center gap-2 ${
-                  selectedForRoute.size === 0 
-                    ? 'bg-gray-600 cursor-not-allowed' 
-                    : 'bg-green-600 hover:bg-green-700'
+                  selectedForRoute.size === 0 ? 'bg-gray-600 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
                 } text-white px-6 py-3 rounded-lg transition-colors font-semibold`}
               >
                 <Route size={20} />
@@ -760,7 +683,9 @@ const App = () => {
             </div>
           </div>
         )}
-        <div className="bg-gray-800 rounded-lg p-4 mb-6">
+
+        {/* ── Map ── */}
+        <div className="section-card">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold text-orange-400">Stops Overview</h3>
             <button
@@ -768,44 +693,41 @@ const App = () => {
               className={`flex items-center gap-2 ${showMap ? 'bg-purple-700' : 'bg-purple-600'} hover:bg-purple-700 text-white px-4 py-2 rounded transition-colors`}
             >
               <Globe size={18} />
-              {showMap ? 'Hide' : 'Show'} Map
+              <span className="hidden sm:inline">{showMap ? 'Hide' : 'Show'} Map</span>
             </button>
           </div>
-        {showMap && (
-          <div className="mt-4">
-            <div className="flex flex-col gap-3 mb-3">
-              <div className="flex items-center justify-between">
-                <p className="text-gray-400 text-sm">
-                  Showing {filteredStops.length} stops on map
-                </p>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="text-xs text-gray-400">Visited</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                    <span className="text-xs text-gray-400">Not visited</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                    <span className="text-xs text-gray-400">{userLocation ? 'Your location' : 'Start city'}</span>
+
+          {showMap && (
+            <div className="mt-4">
+              <div className="flex flex-col gap-3 mb-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-gray-400 text-sm">Showing {filteredStops.length} stops on map</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      <span className="text-xs text-gray-400">Visited</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                      <span className="text-xs text-gray-400">Not visited</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                      <span className="text-xs text-gray-400">{userLocation ? 'Your location' : 'Start city'}</span>
+                    </div>
                   </div>
                 </div>
               </div>
+              <div id="osm-map" className="w-full h-[500px] rounded-lg border border-gray-700"></div>
             </div>
-
-            {/* Embedded OpenStreetMap */}
-            <div id="osm-map" className="w-full h-[500px] rounded-lg border border-gray-700"></div>
-          </div>
-        )}
+          )}
         </div>
-        <div className="bg-gray-800 rounded-lg overflow-hidden">
+
+        {/* ── Stops Table ── */}
+        <div className="section-card" style={{ padding: 0 }}>
           {/* Table header bar */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
-            <span className="text-sm text-gray-400">
-              {filteredStops.length} stops shown
-            </span>
+          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-700">
+            <span className="text-sm text-gray-400">{filteredStops.length} stops shown</span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setHideVisited(!hideVisited)}
@@ -814,17 +736,12 @@ const App = () => {
                 } text-white px-3 py-2 rounded transition-colors`}
                 title={hideVisited ? 'Showing unvisited only' : 'Showing all stops'}
               >
-                <CheckCircle size={18} fill={hideVisited ? '#f97316' : 'none' } />
+                <CheckCircle size={18} fill={hideVisited ? '#f97316' : 'none'} />
                 <span className="hidden sm:inline">{hideVisited ? 'Unvisited Only' : 'Show All'}</span>
               </button>
               {visitedStops.size > 0 && (
                 <button
-                  onClick={() => {
-                    if (confirm('Clear all visited stops?')) {
-                      setVisitedStops(new Set());
-                      localStorage.removeItem('visitedStops');
-                    }
-                  }}
+                  onClick={clearProgress}
                   style={{ backgroundColor: '#dc2626' }}
                   className="flex items-center gap-2 text-white px-3 py-2 rounded transition-colors hover:opacity-90"
                   title="Clear Progress"
@@ -836,12 +753,14 @@ const App = () => {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="table-wrapper">
+            <table>
               <thead className="bg-gray-950">
                 <tr>
                   <th className="px-4 py-3 text-left text-orange-500">#</th>
-                  <th className="px-4 py-3 text-left text-orange-500">Route</th>
+                  {showRoutePlanner && (
+                    <th className="px-4 py-3 text-left text-orange-500">Route</th>
+                  )}
                   <th className="px-4 py-3 text-left text-orange-500">Stop Name</th>
                   <th className="px-4 py-3 text-left text-orange-500">City</th>
                   <th className="px-4 py-3 text-left text-orange-500">Address</th>
@@ -851,11 +770,11 @@ const App = () => {
               </thead>
               <tbody>
                 {filteredStops.map((stop, idx) => (
-                  <tr 
-                    key={idx} 
+                  <tr
+                    key={idx}
                     className={`border-b border-gray-700 transition-colors ${visitedStops.has(stop.name) ? 'bg-green-900 bg-opacity-20' : ''}`}
                   >
-                    {/* Mobile: Collapsed view */}
+                    {/* Mobile card */}
                     <td className="mobile-card" colSpan={6}>
                       <div className="mobile-card-header">
                         {showRoutePlanner && (
@@ -873,14 +792,12 @@ const App = () => {
                         >
                           <CheckCircle size={20} fill={visitedStops.has(stop.name) ? 'currentColor' : '#f97316'} />
                         </button>
-                        
                         <span className={`flex-grow font-semibold ${visitedStops.has(stop.name) ? 'line-through opacity-60' : ''}`}>
                           {stop.name}
                         </span>
-                        
                         <div className="flex gap-2 items-center flex-shrink-0 ml-auto">
                           <button
-                            onClick={() => openSingleStop(stop)}
+                            onClick={(e) => { e.stopPropagation(); openSingleStop(stop); }}
                             className="text-blue-400 hover:text-blue-300 transition-colors"
                             title="View on Google Maps"
                           >
@@ -900,15 +817,14 @@ const App = () => {
                             className="text-gray-400 hover:text-gray-200 transition-all lg:hidden"
                             title={expandedStops.has(idx) ? 'Collapse' : 'Expand'}
                           >
-                            <ChevronDown 
-                              size={20} 
+                            <ChevronDown
+                              size={20}
                               className={`transition-transform ${expandedStops.has(idx) ? 'rotate-180' : ''}`}
                             />
                           </button>
                         </div>
                       </div>
-                      
-                      {/* Mobile: Expanded details */}
+
                       <div className={`mobile-card-details ${expandedStops.has(idx) ? 'expanded' : ''}`}>
                         <div className="detail-row">
                           <span className="detail-label">City:</span>
@@ -930,19 +846,19 @@ const App = () => {
                         </div>
                       </div>
                     </td>
-                    
-                    {/* Desktop: Regular table view */}
+
+                    {/* Desktop cells */}
                     <td className="desktop-cell px-4 py-3 text-gray-400">{idx + 1}</td>
-                    <td className="desktop-cell px-4 py-3">  {/* Add this new cell */}
-                      {showRoutePlanner && (
+                    {showRoutePlanner && (
+                      <td className="desktop-cell px-4 py-3">
                         <input
                           type="checkbox"
                           checked={selectedForRoute.has(stop.name)}
                           onChange={() => addToRoute(stop.name)}
                           className="w-5 h-5 text-orange-600 bg-gray-700 border-gray-600 rounded focus:ring-orange-500 cursor-pointer"
                         />
-                      )}
-                    </td>
+                      </td>
+                    )}
                     <td className="desktop-cell px-4 py-3 font-semibold text-white">
                       <div className="flex items-center gap-2">
                         <button
@@ -955,7 +871,7 @@ const App = () => {
                         <span className={visitedStops.has(stop.name) ? 'line-through opacity-60' : ''}>
                           {stop.name}
                         </span>
-                        <div className="flex gap-2 items-center flex-shrink-0 ml-auto">
+                        <div className="flex gap-1">
                           <button
                             onClick={() => openSingleStop(stop)}
                             className="text-blue-400 hover:text-blue-300 transition-colors"
@@ -991,7 +907,9 @@ const App = () => {
             </table>
           </div>
         </div>
-        <div className="mt-6 bg-gray-800 rounded-lg p-6">
+
+        {/* ── Special Stops ── */}
+        <div className="section-card">
           <h2 className="text-xl font-bold mb-3 text-orange-400">Special Stops</h2>
           <ul className="space-y-2 text-gray-300 text-sm">
             <li>• <strong>VFW Posts:</strong> Visit any VFW post - not listed here, add to any convenient trip</li>
@@ -999,10 +917,10 @@ const App = () => {
             <li>• <strong>Alternate Stops (ALT):</strong> Can substitute for regular stops - 5 alternates included in list</li>
           </ul>
         </div>
+
       </div>
     </div>
   );
 };
 
-// export default TourRoutePlanner;
-export default App
+export default App;
