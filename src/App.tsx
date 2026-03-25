@@ -324,17 +324,48 @@ const App = () => {
           .bindPopup(`<strong>${startCity}</strong><br><em>Starting city</em>`);
       }
 
-      filteredStops.forEach(stop => {
-        const color = visitedStops.has(stop.name) ? '#22c55e' : '#f97316';
+      filteredStops.forEach((tourStop, idx) => {
+        const color = visitedStops.has(tourStop.name) ? 
+          '#22c55e'
+          : selectedForRoute.has(tourStop.name)
+            ? '#a855f7'
+            : '#f97316';
         const markerIcon = L.divIcon({
           className: 'custom-marker',
           html: `<div style="background-color:${color};width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></div>`,
           iconSize: [14, 14],
           iconAnchor: [7, 7]
         });
-        L.marker([stop.lat, stop.lon], { icon: markerIcon })
+
+        const marker = L.marker([tourStop.lat, tourStop.lon], { icon: markerIcon })
           .addTo(map)
-          .bindPopup(`<strong>${stop.name}</strong><br>${stop.city}<br>${stop.distance} miles`);
+          .bindPopup(`
+            <div style="min-width:160px">
+              <strong>${tourStop.name}</strong><br/>
+              ${tourStop.city}<br/>
+              ${tourStop.distance} miles<br/>
+              <div style="display:flex;gap:6px;margin-top:8px">
+                <button 
+                  id="route-${idx}"
+                  style="background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:12px"
+                >Navigate</button>
+                <button 
+                  id="add-${idx}"
+                  style="background:#ea580c;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:12px"
+                >+ Route</button>
+              </div>
+            </div>
+          `);
+
+        marker.on('popupopen', () => {
+          document.getElementById(`route-${idx}`)?.addEventListener('click', () => {
+            openSingleStop(tourStop);
+          });
+          document.getElementById(`add-${idx}`)?.addEventListener('click', () => {
+            addToRoute(tourStop.name);
+            setShowRoutePlanner(true);
+          });
+        });
       });
     };
 
@@ -346,7 +377,7 @@ const App = () => {
         mapRef.current = null;
       }
     };
-  }, [showMap, filteredStops, userLocation, startCity, visitedStops, distanceFilter]);
+  }, [showMap, filteredStops, userLocation, startCity, visitedStops, distanceFilter, selectedForRoute]);
 
   const clearProgress = () => {
     if (confirm('Clear all visited stops?')) {
