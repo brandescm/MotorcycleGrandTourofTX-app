@@ -367,15 +367,6 @@ const App = () => {
           <p className="text-xs text-gray-500">App Version: {APP_VERSION}</p>
           <p className="text-gray-400">Organized by Distance from Your Starting Point</p>
           <div className="flex justify-center gap-6 mt-4 text-sm flex-wrap">
-            <a
-              href="https://motorcyclegrandtouroftexas.com/picture-submission-portal-2026-tour/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-green-400 hover:text-green-300 transition-colors font-medium"
-            >
-              <Camera size={16} />
-              Submit Tour Photos
-            </a>
             <div className="flex items-center gap-2">
               <MapPin className="text-orange-400" size={16} />
               <span>{stops.length} Total Stops</span>
@@ -408,13 +399,24 @@ const App = () => {
             {visitedStops.size >= 25 && visitedStops.size < 50 && " • You'll earn a Tour Finisher patch!"}
             {visitedStops.size >= 50 && " • 🎉 Tour Complete! You earned the 50 Stop Finisher rocker!"}
           </p>
-          <button
-            onClick={clearProgress}
-            className="mt-3 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
-          >
-            <X size={16} />
-            <span className="hidden sm:inline">Clear Progress</span>
-          </button>
+          <div className="flex items-center justify-between mt-3">
+            <a
+              href="https://motorcyclegrandtouroftexas.com/picture-submission-portal-2026-tour/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-green-400 hover:text-green-300 transition-colors font-medium"
+            >
+              <Camera size={16} />
+              Submit Tour Photos
+            </a>
+            <button
+              onClick={clearProgress}
+              className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-colors"
+            >
+              <X size={16} />
+              <span className="hidden sm:inline">Clear Progress</span>
+            </button>
+          </div>
         </div>
 
         {/* ── Starting Location ── */}
@@ -739,20 +741,8 @@ const App = () => {
                 <CheckCircle size={18} fill={hideVisited ? '#f97316' : 'none'} />
                 <span className="hidden sm:inline">{hideVisited ? 'Unvisited Only' : 'Show All'}</span>
               </button>
-              {visitedStops.size > 0 && (
-                <button
-                  onClick={clearProgress}
-                  style={{ backgroundColor: '#dc2626' }}
-                  className="flex items-center gap-2 text-white px-3 py-2 rounded transition-colors hover:opacity-90"
-                  title="Clear Progress"
-                >
-                  <X size={18} />
-                  <span className="hidden sm:inline">Clear Progress</span>
-                </button>
-              )}
             </div>
           </div>
-
           <div className="table-wrapper">
             <table>
               <thead className="bg-gray-950">
