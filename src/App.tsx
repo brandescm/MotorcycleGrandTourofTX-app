@@ -111,6 +111,33 @@ const App = () => {
       setExpandedStops(newExpanded);
   };
 
+  const getAddressFromCoords = async (lat: number, lon: number): Promise<string> => {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`
+    );
+    const data = await res.json();
+    return data.display_name;
+  };
+
+  const openSingleStop = async (stop: TourStop) => {
+    let url = 'https://www.google.com/maps/dir/?api=1';
+    console.log('Opening single stop route for:', stop.name);
+    try {
+      console.log('Attempting to get origin address for single stop route');
+      if (userLocation) {
+        const originAddress = await getAddressFromCoords(userLocation.lat, userLocation.lon);
+        url += `&origin=${encodeURIComponent(originAddress)}`;
+        console.log('Using user location as origin:', originAddress);
+      }
+    } catch (err) {
+      console.error('Failed to get origin address:', err);
+    }
+    
+    url += `&destination=${encodeURIComponent(`${stop.address}, ${stop.city}`)}`;
+    console.log('Opening single stop URL:', url);
+    window.open(url, '_blank');
+  };
+
   const addToRoute = (stopName: string) => {
     const newSelected = new Set(selectedForRoute);
     if (newSelected.has(stopName)) {
@@ -121,21 +148,13 @@ const App = () => {
     setSelectedForRoute(newSelected);
   };
 
-  const openMultiStopRoute = () => {
+  const openMultiStopRoute = async () => {
     const selectedStops = filteredStops.filter(s => selectedForRoute.has(s.name));
-    
     if (selectedStops.length === 0) {
       alert('Please select at least one stop for your route');
       return;
     }
-    
-    if (selectedStops.length === 1) {
-      // Single stop - just open it
-      const stop = selectedStops[0];
-      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address + ', ' + stop.city)}`, '_blank');
-      return;
-    }
-    
+
     const maxStops = userLocation ? 10 : 11;
     // Google Maps allows max 10 waypoints, so limit to 11 total stops
     if (selectedStops.length > maxStops) {
@@ -147,7 +166,9 @@ const App = () => {
   
     // Use current location as origin if available
     if (userLocation) {
-      url += `&origin=${userLocation.lat},${userLocation.lon}`;
+      const originAddress = await getAddressFromCoords(userLocation.lat, userLocation.lon);
+      url += `&origin=${encodeURIComponent(originAddress)}`;
+      // url += `&origin=${userLocation.lat},${userLocation.lon}`;
       
       // All selected stops become waypoints except the last one (destination)
       if (selectedStops.length === 1) {
@@ -167,6 +188,7 @@ const App = () => {
       // No user location - use first stop as origin
       if (selectedStops.length === 1) {
         const stop = selectedStops[0];
+        console.log('Early return: single stop');
         window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address + ', ' + stop.city)}`, '_blank');
         return;
       }
@@ -184,7 +206,7 @@ const App = () => {
         url += `&waypoints=${waypoints}`;
       }
     }
-    
+    console.log('Opening route URL:', url);
     window.open(url, '_blank');
   };
 
@@ -527,6 +549,9 @@ const App = () => {
         </div>
         <div className="bg-gray-800 rounded-lg p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div className="col-span-1 md:col-span-2 lg:col-span-4">
+              <h3 className="text-lg font-bold text-orange-400">Stop Filters</h3>
+            </div>
             <div className="col-span-1 md:col-span-2">
               <label className="block text-sm text-gray-400 mb-2">Search Stops</label>
               <div className="relative">
@@ -853,9 +878,9 @@ const App = () => {
                           {stop.name}
                         </span>
                         
-                        <div className="flex gap-2 items-center flex-shrink-0">
+                        <div className="flex gap-2 items-center flex-shrink-0 ml-auto">
                           <button
-                            onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address + ', ' + stop.city)}`, '_blank')}
+                            onClick={() => openSingleStop(stop)}
                             className="text-blue-400 hover:text-blue-300 transition-colors"
                             title="View on Google Maps"
                           >
@@ -930,9 +955,9 @@ const App = () => {
                         <span className={visitedStops.has(stop.name) ? 'line-through opacity-60' : ''}>
                           {stop.name}
                         </span>
-                        <div className="flex gap-1">
+                        <div className="flex gap-2 items-center flex-shrink-0 ml-auto">
                           <button
-                            onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address + ', ' + stop.city)}`, '_blank')}
+                            onClick={() => openSingleStop(stop)}
                             className="text-blue-400 hover:text-blue-300 transition-colors"
                             title="View on Google Maps"
                           >
