@@ -4,7 +4,6 @@ export interface TourStop {
   address: string;
   lat: number;
   lon: number;
-  distance: number;
   region: string;
   imageUrl: string;
 }
@@ -17,7 +16,6 @@ export const baseStops: TourStop[] = [
     address: "702 e university ave, Georgetown, TX", 
     lat: 30.6327, 
     lon: -97.6769, 
-    distance: 25, 
     region: "Central",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-44.jpeg?ssl=1"
   },
@@ -27,7 +25,6 @@ export const baseStops: TourStop[] = [
     address: "410 west 7th st, Taylor, TX", 
     lat: 30.5705, 
     lon: -97.4094, 
-    distance: 35, 
     region: "Central",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-33.jpeg?ssl=1"
   },
@@ -37,7 +34,6 @@ export const baseStops: TourStop[] = [
     address: "county rd 401, Marble Falls, TX", 
     lat: 30.52859372405988,  
     lon: -98.26528508961898, 
-    distance: 40, 
     region: "Central",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-1.jpeg?ssl=1"
   },
@@ -47,7 +43,6 @@ export const baseStops: TourStop[] = [
     address: "2001 w state hwy 29, Burnet, TX", 
     lat: 30.7580, 
     lon: -98.2283, 
-    distance: 40, 
     region: "Central",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-40.jpeg?ssl=1"
   },
@@ -57,7 +52,6 @@ export const baseStops: TourStop[] = [
     address: "2402 s water st, Burnet, TX", 
     lat: 30.7580, 
     lon: -98.2283, 
-    distance: 40, 
     region: "Central",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-36.jpeg?ssl=1"
   },
@@ -67,7 +61,6 @@ export const baseStops: TourStop[] = [
     address: "1073 tx 304, Bastrop, TX", 
     lat: 30.1102, 
     lon: -97.3152, 
-    distance: 45, 
     region: "Central",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-41.jpeg?ssl=1"
   },
@@ -77,7 +70,6 @@ export const baseStops: TourStop[] = [
     address: "200 e elm st, Johnson City, TX", 
     lat: 30.2769, 
     lon: -98.4072, 
-    distance: 48, 
     region: "Central",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-39.jpeg?ssl=1"
   },
@@ -89,7 +81,6 @@ export const baseStops: TourStop[] = [
     address: "14999 Ranch to Market Rd 150, Driftwood, TX 78619", 
     lat: 30.1069, 
     lon: -98.0308, 
-    distance: 55, 
     region: "Hill Country",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-32.jpeg?ssl=1"
   },
@@ -99,7 +90,6 @@ export const baseStops: TourStop[] = [
     address: "4040 fm 484, Fischer, TX", 
     lat: 29.9697, 
     lon: -98.2536, 
-    distance: 60, 
     region: "Hill Country",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-19.jpeg?ssl=1"
   },
@@ -109,7 +99,6 @@ export const baseStops: TourStop[] = [
     address: "675 flying l drive, Bandera, TX", 
     lat: 29.7269, 
     lon: -99.0736, 
-    distance: 70, 
     region: "Hill Country",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-10.jpeg?ssl=1"
   },
@@ -119,7 +108,6 @@ export const baseStops: TourStop[] = [
     address: "544 waring welfare rd, Waring, TX", 
     lat: 29.9406, 
     lon: -98.7814, 
-    distance: 75, 
     region: "Hill Country",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/%E2%80%8EWARING-GENERAL-STORE.%E2%80%8E001-1.png?ssl=1"
   },
@@ -129,7 +117,6 @@ export const baseStops: TourStop[] = [
     address: "19522 w ranch road 152, Castell, TX", 
     lat: 30.6769, 
     lon: -99.0914, 
-    distance: 80, 
     region: "Hill Country",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-13.jpeg?ssl=1"
   },
@@ -139,7 +126,6 @@ export const baseStops: TourStop[] = [
     address: "315 w main st, suite 13, Waxahachie, TX", 
     lat: 32.3868, 
     lon: -96.8483, 
-    distance: 95, 
     region: "North",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-47.jpeg?ssl=1"
   },
@@ -149,7 +135,6 @@ export const baseStops: TourStop[] = [
     address: "657 ranch road 337, Leakey, TX", 
     lat: 29.7289, 
     lon: -99.7608, 
-    distance: 100, 
     region: "Hill Country",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-23.jpeg?ssl=1"
   },
@@ -161,7 +146,6 @@ export const baseStops: TourStop[] = [
     address: "23400 park road 12, Washington, TX", 
     lat: 30.3319, 
     lon: -96.1550, 
-    distance: 105, 
     region: "Central East",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-11.jpeg?ssl=1"
   },
@@ -171,7 +155,6 @@ export const baseStops: TourStop[] = [
     address: "1101 south blue bell road, Brenham, TX", 
     lat: 30.1669, 
     lon: -96.3978, 
-    distance: 110, 
     region: "Central East",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-12.jpeg?ssl=1"
   },
@@ -181,7 +164,6 @@ export const baseStops: TourStop[] = [
     address: "129 e Washington ave, Navasota, TX", 
     lat: 30.3880, 
     lon: -96.0878, 
-    distance: 110, 
     region: "Central East",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-27.jpeg?ssl=1"
   },
@@ -191,7 +173,6 @@ export const baseStops: TourStop[] = [
     address: "12528 fm109, Welcome, TX", 
     lat: 30.0347, 
     lon: -96.3478, 
-    distance: 115, 
     region: "Central East",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-7.jpeg?ssl=1"
   },
@@ -201,7 +182,6 @@ export const baseStops: TourStop[] = [
     address: "136 Leona blvd n, Leona, TX", 
     lat: 31.1569, 
     lon: -95.9653, 
-    distance: 120, 
     region: "Central East",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-21.jpeg?ssl=1"
   },
@@ -211,7 +191,6 @@ export const baseStops: TourStop[] = [
     address: "104 n fannin ave, Cameron, TX", 
     lat: 30.8530, 
     lon: -96.9708, 
-    distance: 125, 
     region: "Central East",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-22.jpeg?ssl=1"
   },
@@ -221,7 +200,6 @@ export const baseStops: TourStop[] = [
     address: "7250 edge cut off road, Hearne, TX", 
     lat: 30.8786, 
     lon: -96.5928, 
-    distance: 130, 
     region: "Central East",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-30.jpeg?ssl=1"
   },
@@ -231,7 +209,6 @@ export const baseStops: TourStop[] = [
     address: "117 n 2nd st, Rosebud, TX", 
     lat: 31.0764, 
     lon: -96.9786, 
-    distance: 135, 
     region: "Central East",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-31.jpeg?ssl=1"
   },
@@ -241,7 +218,6 @@ export const baseStops: TourStop[] = [
     address: "210 elm street, Teague, TX", 
     lat: 31.6236, 
     lon: -96.2831, 
-    distance: 140, 
     region: "Central East",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-4.jpeg?ssl=1"
   },
@@ -251,7 +227,6 @@ export const baseStops: TourStop[] = [
     address: "McKinney st, Mexia, TX", 
     lat: 31.6797, 
     lon: -96.4822, 
-    distance: 140, 
     region: "Central East",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-46.jpeg?ssl=1"
   },
@@ -261,7 +236,6 @@ export const baseStops: TourStop[] = [
     address: "2637 Summit ave, Plano, TX", 
     lat: 33.0198, 
     lon: -96.6989, 
-    distance: 145, 
     region: "North",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-2.jpeg?ssl=1"
   },
@@ -271,7 +245,6 @@ export const baseStops: TourStop[] = [
     address: "15402 midway road, Addison, TX", 
     lat: 32.9540, 
     lon: -96.8353, 
-    distance: 145, 
     region: "North",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-6.jpeg?ssl=1"
   },
@@ -281,7 +254,6 @@ export const baseStops: TourStop[] = [
     address: "101 e southwest pkwy, Lewisville, TX", 
     lat: 33.0462, 
     lon: -96.9942, 
-    distance: 145, 
     region: "North",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-37.jpeg?ssl=1"
   },
@@ -291,7 +263,6 @@ export const baseStops: TourStop[] = [
     address: "732 e pecan st, Celina, TX", 
     lat: 33.3245, 
     lon: -96.7845, 
-    distance: 150, 
     region: "North",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-42.jpeg?ssl=1"
   },
@@ -303,7 +274,6 @@ export const baseStops: TourStop[] = [
     address: "state hwy 31, Dawson, TX", 
     lat: 31.8944, 
     lon: -96.7100, 
-    distance: 155, 
     region: "Northeast",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-8.jpeg?ssl=1"
   },
@@ -313,7 +283,6 @@ export const baseStops: TourStop[] = [
     address: "106 w 11th st, Kemp, TX", 
     lat: 32.4426, 
     lon: -96.2286, 
-    distance: 160, 
     region: "Northeast",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-29.jpeg?ssl=1"
   },
@@ -323,7 +292,6 @@ export const baseStops: TourStop[] = [
     address: "122 w collin st, Leonard, TX", 
     lat: 33.3784, 
     lon: -96.2464, 
-    distance: 165, 
     region: "Northeast",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-15.jpeg?ssl=1"
   },
@@ -333,7 +301,6 @@ export const baseStops: TourStop[] = [
     address: "1200 s trade days blvd, Canton, TX", 
     lat: 32.5568, 
     lon: -95.8630, 
-    distance: 170, 
     region: "Northeast",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/%E2%80%8EALT-4-VAN-ZANDT-COUNTY-VET-MEM.%E2%80%8E001.png?ssl=1"
   },
@@ -343,7 +310,6 @@ export const baseStops: TourStop[] = [
     address: "319 N 3rd st, Cranfills Gap, TX", 
     lat: 31.7711, 
     lon: -97.8233, 
-    distance: 175, 
     region: "North Central",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-5.jpeg?ssl=1"
   },
@@ -353,7 +319,6 @@ export const baseStops: TourStop[] = [
     address: "101 n bridge st, Victoria, TX", 
     lat: 28.8053, 
     lon: -97.0036, 
-    distance: 180, 
     region: "South",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-49.jpeg?ssl=1"
   },
@@ -363,7 +328,6 @@ export const baseStops: TourStop[] = [
     address: "728 w main st, Yorktown, TX", 
     lat: 28.9811, 
     lon: -97.5028, 
-    distance: 185, 
     region: "South",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Alt-5.jpeg?ssl=1"
   },
@@ -375,7 +339,6 @@ export const baseStops: TourStop[] = [
     address: "w. pacific and dean, Gladewater, TX", 
     lat: 32.5368, 
     lon: -94.9427, 
-    distance: 210, 
     region: "East",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-18.jpeg?ssl=1"
   },
@@ -385,7 +348,6 @@ export const baseStops: TourStop[] = [
     address: "1201 3rd st, Corpus Christi, TX", 
     lat: 27.8006, 
     lon: -97.3964, 
-    distance: 220, 
     region: "South",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-20.jpeg?ssl=1"
   },
@@ -395,7 +357,6 @@ export const baseStops: TourStop[] = [
     address: "745 fm 343 east, Rusk, TX", 
     lat: 31.7957, 
     lon: -95.1508, 
-    distance: 230, 
     region: "East",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-43.jpeg?ssl=1"
   },
@@ -405,7 +366,6 @@ export const baseStops: TourStop[] = [
     address: "114 fort cir, Newcastle, TX", 
     lat: 33.1948, 
     lon: -98.7414, 
-    distance: 240, 
     region: "North Central",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-26.jpeg?ssl=1"
   },
@@ -417,7 +377,6 @@ export const baseStops: TourStop[] = [
     address: "113 e Austin st, Jefferson, TX", 
     lat: 32.7568, 
     lon: -94.3452, 
-    distance: 270, 
     region: "East",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-24.jpeg?ssl=1"
   },
@@ -427,7 +386,6 @@ export const baseStops: TourStop[] = [
     address: "10552 us 84, Joaquin, TX", 
     lat: 31.9650, 
     lon: -94.0497, 
-    distance: 280, 
     region: "East",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-48.jpeg?ssl=1"
   },
@@ -437,7 +395,6 @@ export const baseStops: TourStop[] = [
     address: "700 procter st, Port Arthur, TX", 
     lat: 29.8988, 
     lon: -93.9402, 
-    distance: 290, 
     region: "East",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-34.jpeg?ssl=1"
   },
@@ -449,7 +406,6 @@ export const baseStops: TourStop[] = [
     address: "1412 w ohio ave, Midland, TX", 
     lat: 31.9973, 
     lon: -102.0779, 
-    distance: 320, 
     region: "West",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-38.jpeg?ssl=1"
   },
@@ -459,7 +415,6 @@ export const baseStops: TourStop[] = [
     address: "119 n ave north, Post, TX", 
     lat: 33.1912, 
     lon: -101.3793, 
-    distance: 330, 
     region: "Panhandle",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-28.jpeg?ssl=1"
   },
@@ -469,7 +424,6 @@ export const baseStops: TourStop[] = [
     address: "302 main st, Seagraves, TX", 
     lat: 32.9434, 
     lon: -102.5654, 
-    distance: 350, 
     region: "West",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-45.jpeg?ssl=1"
   },
@@ -479,7 +433,6 @@ export const baseStops: TourStop[] = [
     address: "9261 alley oop lane, Iraan, TX", 
     lat: 30.9147, 
     lon: -101.8965, 
-    distance: 360, 
     region: "West",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-9.jpeg?ssl=1"
   },
@@ -489,7 +442,6 @@ export const baseStops: TourStop[] = [
     address: "main st, Turkey, TX", 
     lat: 34.3942, 
     lon: -100.8979, 
-    distance: 370, 
     region: "Panhandle",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-14.jpeg?ssl=1"
   },
@@ -499,7 +451,6 @@ export const baseStops: TourStop[] = [
     address: "418 s main st, Wheeler, TX", 
     lat: 35.4453, 
     lon: -100.2743, 
-    distance: 390, 
     region: "Panhandle",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-16.jpeg?ssl=1"
   },
@@ -511,7 +462,6 @@ export const baseStops: TourStop[] = [
     address: "227 n Harvey st, Borger, TX", 
     lat: 35.6678, 
     lon: -101.3974, 
-    distance: 410, 
     region: "Panhandle",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-35.jpeg?ssl=1"
   },
@@ -521,7 +471,6 @@ export const baseStops: TourStop[] = [
     address: "105 w broadway st, Van Horn, TX", 
     lat: 31.0404, 
     lon: -104.8308, 
-    distance: 480, 
     region: "Far West",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Alt-3.jpeg?ssl=1"
   },
@@ -531,7 +480,6 @@ export const baseStops: TourStop[] = [
     address: "14880 us 90, Valentine, TX", 
     lat: 30.5856, 
     lon: -104.4822, 
-    distance: 520, 
     region: "Far West",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Alt-2.jpeg?ssl=1"
   },
@@ -541,7 +489,6 @@ export const baseStops: TourStop[] = [
     address: "9550 gateway blvd n, El Paso, TX", 
     lat: 31.7619, 
     lon: -106.4850, 
-    distance: 580, 
     region: "Far West",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-3.jpeg?ssl=1"
   },
@@ -551,7 +498,6 @@ export const baseStops: TourStop[] = [
     address: "21709 fm170, Lajitas, TX", 
     lat: 29.2669, 
     lon: -103.7653, 
-    distance: 600, 
     region: "Far West",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-17.jpeg?ssl=1"
   }

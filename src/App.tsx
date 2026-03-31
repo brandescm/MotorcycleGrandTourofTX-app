@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { MapPin, Navigation, Search, Download, Map, Camera, CheckCircle, ChevronDown, Route, AlertCircle, Copy, Globe, X } from 'lucide-react';
 import './App.css'
 import './mobile.css'
 import { baseStops, type TourStop } from './tourStops';
-
+import { cityCoordinates } from './cityCoordinates';
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -21,23 +21,23 @@ const App = () => {
   const mapRef = useRef<any>(null);
   const [hideVisited, setHideVisited] = useState(false);
 
-  const cityCoordinates = {
-    'Liberty Hill': { lat: 30.6660, lon: -97.9225 },
-    'Austin': { lat: 30.2672, lon: -97.7431 },
-    'Georgetown': { lat: 30.6327, lon: -97.6769 },
-    'San Antonio': { lat: 29.4241, lon: -98.4936 },
-    'Houston': { lat: 29.7604, lon: -95.3698 },
-    'Dallas': { lat: 32.7767, lon: -96.7970 },
-    'Fort Worth': { lat: 32.7555, lon: -97.3308 },
-    'El Paso': { lat: 31.7619, lon: -106.4850 },
-    'Amarillo': { lat: 35.2220, lon: -101.8313 },
-    'Lubbock': { lat: 33.5779, lon: -101.8552 },
-    'Corpus Christi': { lat: 27.8006, lon: -97.3964 },
-    'Abilene': { lat: 32.4487, lon: -99.7331 },
-    'Waco': { lat: 31.5493, lon: -97.1467 },
-    'Midland': { lat: 31.9973, lon: -102.0779 },
-    'Tyler': { lat: 32.3513, lon: -95.3011 }
-  };
+  // const cityCoordinates = {
+  //   'Liberty Hill': { lat: 30.6660, lon: -97.9225 },
+  //   'Austin': { lat: 30.2672, lon: -97.7431 },
+  //   'Georgetown': { lat: 30.6327, lon: -97.6769 },
+  //   'San Antonio': { lat: 29.4241, lon: -98.4936 },
+  //   'Houston': { lat: 29.7604, lon: -95.3698 },
+  //   'Dallas': { lat: 32.7767, lon: -96.7970 },
+  //   'Fort Worth': { lat: 32.7555, lon: -97.3308 },
+  //   'El Paso': { lat: 31.7619, lon: -106.4850 },
+  //   'Amarillo': { lat: 35.2220, lon: -101.8313 },
+  //   'Lubbock': { lat: 33.5779, lon: -101.8552 },
+  //   'Corpus Christi': { lat: 27.8006, lon: -97.3964 },
+  //   'Abilene': { lat: 32.4487, lon: -99.7331 },
+  //   'Waco': { lat: 31.5493, lon: -97.1467 },
+  //   'Midland': { lat: 31.9973, lon: -102.0779 },
+  //   'Tyler': { lat: 32.3513, lon: -95.3011 }
+  // };
 
   const startCoords = userLocation || cityCoordinates[startCity as keyof typeof cityCoordinates];
 
@@ -172,19 +172,17 @@ const App = () => {
   };
   const clearRoute = () => setSelectedForRoute(new Set());
 
-  const stops: TourStop[] = baseStops.map(stop => {
-    const dist = calculateDistance(startCoords.lat, startCoords.lon, stop.lat, stop.lon);
-    return {
-      name: stop.name,
-      city: stop.city,
-      address: stop.address,
-      region: stop.region,
-      distance: isNaN(dist) ? stop.distance : dist,
-      lat: stop.lat,
-      lon: stop.lon,
-      imageUrl: stop.imageUrl
-    };
-  });
+  const stops = useMemo(
+    () =>
+      baseStops.map(stop => {
+        const dist = calculateDistance(startCoords.lat, startCoords.lon, stop.lat, stop.lon);
+        return {
+          ...stop,
+          distance: isNaN(dist) ? 0 : dist
+        };
+      }) as (TourStop & { distance: number })[],
+    [startCoords]
+  );
 
   const maxStopDistance = Math.max(...stops.map(s => s.distance));
   useEffect(() => {
