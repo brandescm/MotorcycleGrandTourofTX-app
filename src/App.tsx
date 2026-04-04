@@ -5,6 +5,8 @@ import './mobile.css'
 import { baseStops, type TourStop } from './tourStops';
 import { cityCoordinates } from './cityCoordinates';
 
+const APP_TITLE = '2026 Texas Motorcycle Tour Stops';
+
 const App = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('distance');
@@ -351,6 +353,11 @@ const App = () => {
                   id="add-${idx}"
                   style="background:#ea580c;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:12px"
                 >+ Route</button>
+                ${tourStop.imageUrl ? `
+                <button 
+                  id="img-${idx}"
+                  style="background:#7c3aed;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:12px"
+                >📷</button>` : ''}
               </div>
             </div>
           `);
@@ -362,6 +369,9 @@ const App = () => {
           document.getElementById(`add-${idx}`)?.addEventListener('click', () => {
             addToRoute(tourStop.name);
             setShowRoutePlanner(true);
+          });
+          document.getElementById(`img-${idx}`)?.addEventListener('click', () => {
+            window.open(tourStop.imageUrl, '_blank');
           });
         });
       });
@@ -391,7 +401,7 @@ const App = () => {
         {/* ── Header ── */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-orange-500 mb-2">
-            2026 Texas Motorcycle Tour Stops
+            {APP_TITLE}
           </h1>
           <p className="text-xs text-gray-500">App Version: {APP_VERSION}</p>
           <p className="text-gray-400">Organized by Distance from Your Starting Point</p>
@@ -489,10 +499,14 @@ const App = () => {
                 </button>
               )}
               {userLocation && (
-                <div className="text-green-400 text-sm flex items-center gap-1">
-                  <CheckCircle size={16} />
-                  <span className="hidden sm:inline">Location set</span>
-                </div>
+                <button
+                  onClick={getUserLocation}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors whitespace-nowrap"
+                  title="Refresh location"
+                >
+                  <Navigation size={18} />
+                  <span className="hidden sm:inline">Refresh</span>
+                </button>
               )}
               {locationError && (
                 <div className="text-red-400 text-sm">{locationError}</div>
