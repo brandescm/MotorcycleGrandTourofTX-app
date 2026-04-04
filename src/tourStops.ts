@@ -224,9 +224,9 @@ export const baseStops: TourStop[] = [
   { 
     name: "Cindy Walker Mural", 
     city: "Mexia", 
-    address: "McKinney st, Mexia, TX", 
-    lat: 31.6797, 
-    lon: -96.4822, 
+    address: "102 N. McKinney st, Mexia, TX", 
+    lat: 31.68093, 
+    lon: -96.48263, 
     region: "Central East",
     imageUrl: "https://i0.wp.com/motorcyclegrandtouroftexas.com/wp-content/uploads/2025/12/Stop-46.jpeg?ssl=1"
   },
